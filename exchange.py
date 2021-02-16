@@ -5,12 +5,13 @@ import requests
 class Exchange:
     def __init__(self):
         pass
-    
-    def get_ticker(self):
-        response = requests.get(f'{self.URL}{self.TICKER_EP}')
-        ticker = response.json()
-        self.bid = ticker["bid"]  # selling price 
-        self.ask = ticker["ask"]  # buying price
+
+
+    def update_ticker(self):
+        ticker = self.get_ticker()
+
+        self.bid = int(ticker["bid"])
+        self.ask = int(ticker["ask"])
         self.spread = self.ask - self.bid
         self.timestamp = ticker["timestamp"]
 
@@ -22,6 +23,12 @@ class CoinCheck(Exchange):
         self.TICKER_EP = "/api/ticker"
         self.MIN_TRANS_UNIT = 0.005
         self.REMITTANCE_FEE = 0.001
+
+    def get_ticker(self):
+        request_url = f'{self.URL}{self.TICKER_EP}'
+        response = requests.get(request_url)
+        ticker = response.json()
+        return ticker
 
 
 class BitFlyer(Exchange):
@@ -45,10 +52,16 @@ class DmmBitcoin(Exchange):
 class GmoCoin(Exchange):
     def __init__(self):
         super(GmoCoin, self).__init__()
-        self.URL = ""
-        self.TICKER_EP = ""
+        self.URL = "https://api.coin.z.com/public"
+        self.TICKER_EP = "/v1/ticker"
         self.MIN_TRANS_UNIT = 0.0001
         self.REMITTANCE_FEE = 0
+
+    def get_ticker(self, symbol="BTC"):
+        request_url = f'{self.URL}{self.TICKER_EP}?symbol={symbol}'
+        response = requests.get(request_url)
+        ticker = response.json()["data"][0]
+        return ticker
 
 
 class BitBank(Exchange):
@@ -88,6 +101,6 @@ class SviVcTrade(Exchange):
 
 
 if __name__ == '__main__':
-    cc = CoinCheck()
-    cc.get_ticker()
-    print(cc.bid, cc.ask, cc.spread, cc.timestamp)
+    gc = GmoCoin()
+    gc.update_ticker()
+    print(gc.bid, gc.ask, gc.spread, gc.timestamp)
