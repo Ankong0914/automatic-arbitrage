@@ -100,7 +100,17 @@ class SviVcTrade(Exchange):
         self.REMITTANCE_FEE = 0
 
 
+def compare_price(exc1, exc2):
+    exc1.update_ticker()
+    exc2.update_ticker()
+
+    if exc1.ask > exc2.ask:
+        profit = exc1.bid - exc2.ask
+    else:
+        profit = exc2.bid - exc1.ask
+    print(f"profit is {profit} yen.")
+
 if __name__ == '__main__':
+    cc = CoinCheck()
     gc = GmoCoin()
-    gc.update_ticker()
-    print(gc.bid, gc.ask, gc.spread, gc.timestamp)
+    compare_price(cc, gc)
