@@ -1,5 +1,6 @@
 import time
 import requests
+from itertools import combinations
 
 
 class Exchange:
@@ -39,6 +40,10 @@ class BitFlyer(Exchange):
         self.TICKER_EP = "/v1/ticker"
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_FEE = 0.0004
+        # TODO:
+        self.balance_jpy = 200000
+        self.balance_btc = 0.02
+        self.credit = int(self.balance_btc / self.MIN_TRANS_UNIT)
 
 
     def get_ticker(self):
@@ -74,6 +79,10 @@ class GmoCoin(Exchange):
         self.TICKER_EP = "/v1/ticker"
         self.MIN_TRANS_UNIT = 0.0001
         self.REMITTANCE_FEE = 0
+        # TODO:
+        self.balance_jpy = 200000
+        self.balance_btc = 0.02
+        self.credit = int(self.balance_btc / self.MIN_TRANS_UNIT)
 
     def get_ticker(self, symbol="BTC"):
         request_url = f'{self.URL}{self.TICKER_EP}?symbol={symbol}'
@@ -144,7 +153,7 @@ def compare_price(exchanges):
     for exchange in exchanges:
         exchange.update_ticker()
 
-    for exc_pair in itertools.combinations(exchanges, 2):
+    for exc_pair in combinations(exchanges, 2):
         print(f"{exc_pair[0].NAME}で1 BTCを購入し、{exc_pair[1].NAME}で1 BTCを売却したときの利益")
         print(f"profit: ")
 
