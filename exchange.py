@@ -1,5 +1,9 @@
 import time
 import requests
+import json
+import time
+import hmac
+import hashlib
 from itertools import combinations
 
 
@@ -38,13 +42,14 @@ class BitFlyer(Exchange):
         self.NAME = "bitFlyer"
         self.URL = "https://api.bitflyer.com"
         self.TICKER_EP = "/v1/ticker"
+        self.BALANCE_EP = "/v1/me/getbalance"
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_FEE = 0.0004
-        # TODO:
-        self.balance_jpy = 200000
-        self.balance_btc = 0.02
-        self.credit = int(self.balance_btc / self.MIN_TRANS_UNIT)
 
+        with open("key_config.json", "r") as f:
+            key_conf = json.load(f)
+        self.api_key = key_conf[self.NAME]["api_key"]
+        self.api_secret = key_conf[self.NAME]["api_secret"]
 
     def get_ticker(self):
         request_url = f'{self.URL}{self.TICKER_EP}'
@@ -59,6 +64,25 @@ class BitFlyer(Exchange):
         self.ask = ticker["best_ask"]
         self.spread = self.ask - self.bid
         self.timestamp = ticker["timestamp"]
+    
+    def make_headers(self, method, path, body=""):
+        timestamp = str(time.time())
+        text = timestamp + method + path + body
+        sign = hmac.new( bytes( self.api_secret.encode('ascii')), bytes(text.encode('ascii')), hashlib.sha256).hexdigest()
+        headers = {
+            'ACCESS-KEY': self.api_key,
+            'ACCESS-TIMESTAMP': timestamp,
+            'ACCESS-SIGN': sign,
+            'Content-Type': 'application/json'
+        }
+        return headers
+
+    def get_balance(self):
+        request_url = f'{self.URL}{self.BALANCE_EP}'
+        headers = self.make_headers("GET", self.BALANCE_EP)
+        response = requests.get(request_url, headers=headers)
+        balance = response.json()
+        return balance
 
 
 class DmmBitcoin(Exchange):
@@ -79,10 +103,6 @@ class GmoCoin(Exchange):
         self.TICKER_EP = "/v1/ticker"
         self.MIN_TRANS_UNIT = 0.0001
         self.REMITTANCE_FEE = 0
-        # TODO:
-        self.balance_jpy = 200000
-        self.balance_btc = 0.02
-        self.credit = int(self.balance_btc / self.MIN_TRANS_UNIT)
 
     def get_ticker(self, symbol="BTC"):
         request_url = f'{self.URL}{self.TICKER_EP}?symbol={symbol}'
@@ -139,33 +159,8 @@ class SviVcTrade(Exchange):
         self.REMITTANCE_FEE = 0
 
 
-# def compare_price(exc1, exc2):
-#     exc1.update_ticker()
-#     exc2.update_ticker()
-
-#     if exc1.ask > exc2.ask:
-#         profit = exc1.bid - exc2.ask
-#     else:
-#         profit = exc2.bid - exc1.ask
-#     print(f"profit is {profit} yen.")
-
-def compare_price(exchanges):
-    for exchange in exchanges:
-        exchange.update_ticker()
-
-    for exc_pair in combinations(exchanges, 2):
-        print(f"{exc_pair[0].NAME}で1 BTCを購入し、{exc_pair[1].NAME}で1 BTCを売却したときの利益")
-        print(f"profit: ")
-
-
-    if exc1.ask > exc2.ask:
-        profit = exc1.bid - exc2.ask
-    else:
-        profit = exc2.bid - exc1.ask
-    print(f"profit is {profit} yen.")
-
 if __name__ == '__main__':
     bf = BitFlyer()
     gc = GmoCoin()
-    while True:
-        compare_price(bf, gc)
+    
+    print(bf.get_balance())
