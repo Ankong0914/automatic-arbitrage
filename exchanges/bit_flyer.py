@@ -4,7 +4,7 @@ import json
 import hmac
 import hashlib
 
-from exchange import Exchange
+from exchanges.exchange import Exchange
 
 
 class BitFlyer(Exchange):
@@ -17,19 +17,15 @@ class BitFlyer(Exchange):
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_FEE = 0.0004
 
-        with open("../key_config.json", "r") as f:
+        with open("key_config.json", "r") as f:
             key_conf = json.load(f)
         self.api_key = key_conf[self.NAME]["api_key"]
         self.api_secret = key_conf[self.NAME]["api_secret"]
 
-    def get_ticker(self):
+    def update_ticker(self):
         request_url = f'{self.URL}{self.TICKER_EP}'
         response = requests.get(request_url)
         ticker = response.json()
-        return ticker
-
-    def update_ticker(self):
-        ticker = self.get_ticker()
 
         self.bid = ticker["best_bid"]
         self.ask = ticker["best_ask"]
@@ -52,9 +48,14 @@ class BitFlyer(Exchange):
         }
         return headers
 
-    def get_balance(self):
+    def update_balance(self):
         request_url = f'{self.URL}{self.BALANCE_EP}'
         headers = self.make_headers("GET", self.BALANCE_EP)
         response = requests.get(request_url, headers=headers)
         balance = response.json()
-        return balance
+
+        for currency_data in balance:
+            if currency_data["currency_code"] == "JPY":
+                self.balance_jpy = int(currency_data["amount"])
+            elif currency_data["currency_code"] == "BTC":
+                self.balance_btc = currency_data["amount"]
