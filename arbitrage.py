@@ -1,3 +1,5 @@
+from exchanges.bit_flyer import BitFlyer
+from exchanges.gmo_coin import GmoCoin
 import pandas as pd
 import time
 
@@ -9,10 +11,9 @@ class Arbitrage():
         self.high_ask_exc = None
         self.low_ask_exc = None
         self.LOOP_DURATION = 1.0
-        self.status = self.get_status()  # TODO: rename
         self.trans_size_table = pd.read_csv("data/transaction_size.csv")
 
-    def get_status(self):
+    def get_status(self):  # TODO: rename
         RATIO_THRES = 2
         RATIO_THRES_HEAVY = 5
 
@@ -38,11 +39,18 @@ class Arbitrage():
         else:
             relation = "inclusion"
         return relation
+    
+    def calc_margin(self):
+        selling_price = self.high_ask_exc.bid
+        selling_charge = selling_price * self.high_ask_exc.TRANS_CHARGE_RATE
+        buying_price = self.low_ask_exc.ask
+        buying_charge = buying_price * self.low_ask_exc.TRANS_CHARGE_RATE
+        margin = selling_price - buying_price - selling_charge - buying_charge
+        return margin
 
-    def get_margin_expectation(self):
+    def get_margin_expectation(self, margin):
         MARGIN_THRES = [1000, 5000, 10000, 15000]
 
-        margin = self.high_ask_exc.bid - self.low_ask_exc.ask
         if margin < MARGIN_THRES[0]:
             expectation = "little"
         elif margin < MARGIN_THRES[1]:
@@ -62,7 +70,7 @@ class Arbitrage():
             approach = "tilt"
         return approach
 
-    def get_size(self, trans_size_table, expectation, status, approach):
+    def get_size(self, expectation, status, approach):
         trans_size = self.trans_size_table[
                         (self.trans_size_table["expectation"] == expectation) &
                         (self.trans_size_table["credit_status"] == status) &
@@ -70,11 +78,30 @@ class Arbitrage():
                     ]["credit_size"].values[0]
         return trans_size
 
+    def simulated_order(self, trans_size):
+        self.high_ask_exc.jpy += self.high_ask_exc.bid * trans_size
+        self.high_ask_exc.btc -= trans_size
+        self.low_ask_exc.jpy -= self.low_ask_exc.ask * trans_size
+        self.low_ask_exc.btc += trans_size
+    
+    def show_trans_result(self):
+        print("-------------------------------")
+        profit = self.exc1.balance_jpy + self.exc2.balance_jpy - 500000
+        print(f"profit :{profit}")
+        print("-------------------------------")
+
     def wait_until_next_loop(self, start):
         end = time.time()
         time.sleep(max(0, self.LOOP_DURATION - (end - start)))
 
     def run(self):
+        # get balance TODO: asyncronize
+        self.exc1.update_balance()
+        self.exc2.update_balance()
+
+        # update status
+        status = self.get_status()
+
         while True:
             start = time.time()
 
@@ -87,25 +114,77 @@ class Arbitrage():
                 self.wait_until_next_loop(start)
                 continue
 
-            expectation = self.get_margin_expectation()  # little ~ ultra
+            margin = self.calc_margin()
+            expectation = self.get_margin_expectation(margin)  # little ~ ultra
             if expectation == "little":
                 self.wait_until_next_loop(start)
                 continue
 
             approach = self.get_approach()  # level/tilt
-            trans_size = self.get_size(expectation, self.status, approach)  # 0 ~ 13
+            trans_size = self.get_size(expectation, status, approach)  # 0 ~ 13
             if trans_size == 0:
                 self.wait_until_next_loop(start)
                 continue
 
             # order TODO: asyncronize
-            self.high_ask_exc.post_order("SELL", trans_size)
-            self.low_ask_exc.post_order("BUY", trans_size)
+            # self.high_ask_exc.post_order("SELL", trans_size)
+            # self.low_ask_exc.post_order("BUY", trans_size)
 
             # get balance TODO: asyncronize
             self.exc1.update_balance()
             self.exc2.update_balance()
 
             # update status
-            self.status = self.get_status()
+            status = self.get_status()
+            self.show_trans_result()
             self.wait_until_next_loop(start)
+    
+    def simulate(self):
+        self.exc1.balance_yen = 250000
+        self.exc1.balance_btc = 0.02
+        self.exc2.balance_yen = 250000
+        self.exc2.balance_btc = 0.02
+
+        # update status
+        status = self.get_status()
+
+        while True:
+            start = time.time()
+
+            # update ticker # TODO: asyncronize
+            self.exc1.update_ticker()
+            self.exc2.update_ticker()
+
+            relation = self.get_relation()  # gap/intersection/inclusion
+            if relation != "gap":
+                print(relation)
+                self.wait_until_next_loop(start)
+                continue
+
+            margin = self.calc_margin()
+            expectation = self.get_margin_expectation(margin)  # little ~ ultra
+            if expectation == "little":
+                print(expectation)
+                self.wait_until_next_loop(start)
+                continue
+
+            approach = self.get_approach()  # level/tilt
+            trans_size = self.get_size(expectation, status, approach)  # 0 ~ 13
+            if trans_size == 0:
+                print(trans_size)
+                self.wait_until_next_loop(start)
+                continue
+
+            self.simulated_order(trans_size)
+
+            # update status
+            status = self.get_status()
+
+            self.wait_until_next_loop(start)
+
+
+if __name__ == "__main__":
+    bf = BitFlyer()
+    gc = GmoCoin()
+    arbitrage = Arbitrage(bf, gc)
+    arbitrage.simulate()
