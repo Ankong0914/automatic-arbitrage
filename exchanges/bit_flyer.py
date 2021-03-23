@@ -16,6 +16,8 @@ class BitFlyer(Exchange):
         self.BALANCE_EP = "/v1/me/getbalance"
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_FEE = 0.0004
+        # TODO: this value is changed depends on the amount of transaction for recent month
+        self.TRANS_CHARGE_RATE = 0.0015
 
         with open("key_config.json", "r") as f:
             key_conf = json.load(f)
