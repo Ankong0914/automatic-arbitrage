@@ -17,9 +17,8 @@ class GmoCoin(Exchange):
         self.BALANCE_EP = "/v1/account/assets"
         self.ORDER_EP = "/v1/order"
         self.MIN_TRANS_UNIT = 0.0001
-        self.REMITTANCE_FEE_RATE = 0
-        self.MAKER_FEE_RATE = -0.0001
-        self.TAKER_FEE_RATE = 0.0005
+        self.REMITTANCE_CHARGE_RATE = 0
+        self.TRANS_CHARGE_RATE = 0.0005
 
         with open("key_config.json", "r") as f:
             key_conf = json.load(f)
