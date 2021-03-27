@@ -2,8 +2,8 @@ import asyncio
 import csv
 import time
 
-from exchange import BitFlyer
-from exchange import GmoCoin
+from exchanges.bit_flyer import BitFlyer
+from exchanges.gmo_coin import GmoCoin
 
 
 @asyncio.coroutine
@@ -20,7 +20,7 @@ if __name__ == "__main__":
     bf = BitFlyer()
     gc = GmoCoin()
 
-    with open("data/chart_bitflyer.csv", "a") as f_bf, open("data/chart_gmocoin.csv", "a") as f_gc:
+    with open("data/chart_bitflyer2.csv", "a") as f_bf, open("data/chart_gmocoin2.csv", "a") as f_gc:
         w_bf = csv.writer(f_bf, delimiter=",")
         w_bf.writerow(["index", "ask", "bid", "timestamp"])
         w_gc = csv.writer(f_gc, delimiter=",")

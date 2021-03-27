@@ -11,7 +11,7 @@ class Arbitrage():
         self.high_ask_exc = None
         self.low_ask_exc = None
         self.LOOP_DURATION = 1.0
-        self.trans_size_table = pd.read_csv("data/transaction_size.csv")
+        self.trans_size_table = pd.read_csv("../data/transaction_size.csv")
 
     def get_status(self):  # TODO: rename
         RATIO_THRES = 2

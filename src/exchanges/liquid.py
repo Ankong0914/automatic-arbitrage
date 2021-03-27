@@ -20,7 +20,7 @@ class Liquid(Exchange):
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0
 
-        # with open("key_config.json", "r") as f:
+        # with open("exchanges/key_config.json", "r") as f:
         #     key_conf = json.load(f)
         # self.api_key = key_conf[self.NAME]["api_key"]
         # self.api_secret = key_conf[self.NAME]["api_secret"]

@@ -8,27 +8,27 @@ import hashlib
 from exchanges.exchange import Exchange
 
 
-class GmoCoin(Exchange):
+class CoinCheck(Exchange):
     def __init__(self):
-        super(GmoCoin, self).__init__()
-        self.NAME = "GMO Coin"
-        self.URL = "https://api.coin.z.com"
-        self.TICKER_EP = "/v1/ticker"
-        self.BALANCE_EP = "/v1/account/assets"
-        self.ORDER_EP = "/v1/order"
-        self.MIN_TRANS_UNIT = 0.0001
-        self.REMITTANCE_CHARGE_RATE = 0
-        self.TRANS_CHARGE_RATE = 0.0005
+        super(CoinCheck, self).__init__()
+        self.NAME = "Coincheck"
+        self.URL = "https://coincheck.com"
+        self.TICKER_EP = "/api/ticker"
+        self.BALANCE_EP = ""
+        self.ORDER_EP = ""
+        self.MIN_TRANS_UNIT = 0.005
+        self.REMITTANCE_CHARGE_RATE = 0.001
+        self.TRANS_CHARGE_RATE = 0
 
-        with open("key_config.json", "r") as f:
-            key_conf = json.load(f)
-        self.api_key = key_conf[self.NAME]["api_key"]
-        self.api_secret = key_conf[self.NAME]["api_secret"]
+        # with open("exchanges/key_config.json", "r") as f:
+        #     key_conf = json.load(f)
+        # self.api_key = key_conf[self.NAME]["api_key"]
+        # self.api_secret = key_conf[self.NAME]["api_secret"]
 
-    def update_ticker(self, symbol="BTC"):
-        request_url = f'{self.URL}/public{self.TICKER_EP}?symbol={symbol}'
+    def update_ticker(self):
+        request_url = f'{self.URL}{self.TICKER_EP}'
         response = requests.get(request_url)
-        ticker = response.json()["data"][0]
+        ticker = response.json()
 
         self.bid = int(ticker["bid"])
         self.ask = int(ticker["ask"])
@@ -77,7 +77,4 @@ class GmoCoin(Exchange):
         response = requests.post(request_url, headers=headers, data=json.dumps(reqBody))
         print(json.dumps(response.json(), indent=2))
 
-
-if __name__ == "__main__":
-    gc = GmoCoin()
 
