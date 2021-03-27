@@ -14,13 +14,20 @@ class Arbitrage():
         self.trans_size_table = pd.read_csv("../data/transaction_size.csv")
 
     def get_status(self):  # TODO: rename
-        RATIO_THRES = 2
-        RATIO_THRES_HEAVY = 5
+        RATIO_THRES = 0.3
+        RATIO_THRES_HEAVY = 0.5
 
-        ratio = self.exc1.balance_btc / self.exc2.balance_btc
-        if ratio < RATIO_THRES and ratio > (1 / RATIO_THRES):
+        total_btc = self.exc1.balance_btc + self.exc2.balance_btc
+        diff_btc = abs(self.exc1.balance_btc - self.exc2.balance_btc)
+
+        if total_btc == 0:
             status = "balanced"
-        elif ratio < RATIO_THRES_HEAVY and ratio > (1 / RATIO_THRES_HEAVY):
+            return status
+
+        ratio = diff_btc / total_btc
+        if ratio < RATIO_THRES:
+            status = "balanced"
+        elif ratio < RATIO_THRES_HEAVY:
             status = "unbalanced"
         else:
             status = "unbalanced_heavy"
