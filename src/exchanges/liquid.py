@@ -35,12 +35,13 @@ class Liquid(Exchange):
         self.spread = self.ask - self.bid
         self.timestamp = ticker["timestamp"]
 
-    def make_headers(self, method, path, reqBody={}):
+    def make_headers(self, method, path, reqBody=None):
         timestamp = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
-        if method == "GET":
-            text = timestamp + method + path
+        if reqBody is not None:
+            reqBody = json.dumps(reqBody)
         else:
-            text = timestamp + method + path + json.dumps(reqBody)
+            reqBody = ''
+        text = timestamp + method + path + reqBody
         sign = hmac.new(
             bytes(self.api_secret.encode('ascii')),
             bytes(text.encode('ascii')),

@@ -14,16 +14,16 @@ class CoinCheck(Exchange):
         self.NAME = "Coincheck"
         self.URL = "https://coincheck.com"
         self.TICKER_EP = "/api/ticker"
-        self.BALANCE_EP = ""
+        self.BALANCE_EP = "/api/accounts/balance"
         self.ORDER_EP = ""
         self.MIN_TRANS_UNIT = 0.005
         self.REMITTANCE_CHARGE_RATE = 0.001
         self.TRANS_CHARGE_RATE = 0
 
-        # with open("exchanges/key_config.json", "r") as f:
-        #     key_conf = json.load(f)
-        # self.api_key = key_conf[self.NAME]["api_key"]
-        # self.api_secret = key_conf[self.NAME]["api_secret"]
+        with open("exchanges/key_config.json", "r") as f:
+            key_conf = json.load(f)
+        self.api_key = key_conf[self.NAME]["api_key"]
+        self.api_secret = key_conf[self.NAME]["api_secret"]
 
     def update_ticker(self):
         request_url = f'{self.URL}{self.TICKER_EP}'
@@ -35,35 +35,34 @@ class CoinCheck(Exchange):
         self.spread = self.ask - self.bid
         self.timestamp = ticker["timestamp"]
 
-    def make_headers(self, method, path, reqBody={}):
-        timestamp = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
-        if method == "GET":
-            text = timestamp + method + path
+    def make_headers(self, path, reqBody=None):
+        timestamp = str(int(time.time()))
+        if reqBody is not None:
+            reqBody = json.dumps(reqBody)
         else:
-            text = timestamp + method + path + json.dumps(reqBody)
+            reqBody = ''
+        text = timestamp + path + reqBody
         sign = hmac.new(
             bytes(self.api_secret.encode('ascii')),
             bytes(text.encode('ascii')),
             hashlib.sha256
             ).hexdigest()
         headers = {
-            'API-KEY': self.api_key,
-            'API-TIMESTAMP': timestamp,
-            'API-SIGN': sign
+            'ACCESS-KEY': self.api_key,
+            'ACCESS-NONCE': timestamp,
+            'ACCESS-SIGNATURE': sign,
+            'Content-Type': 'application/json'
         }
         return headers
 
     def update_balance(self):
-        request_url = f'{self.URL}/private{self.BALANCE_EP}'
-        headers = self.make_headers("GET", self.BALANCE_EP)
+        request_url = f'{self.URL}{self.BALANCE_EP}'
+        headers = self.make_headers(request_url)
         response = requests.get(request_url, headers=headers)
-        balance = response.json()["data"]
-        
-        for currency_data in balance:
-            if currency_data["symbol"] == "JPY":
-                self.balance_jpy = int(currency_data["amount"])
-            elif currency_data["symbol"] == "BTC":
-                self.balance_btc = float(currency_data["amount"])
+        balance = response.json()
+
+        self.balance_jpy = int(balance["jpy"])
+        self.balance_btc = float(balance["btc"])
 
     def post_order(self, side, size):
         request_url = f'{self.URL}/private{self.ORDER_EP}'
