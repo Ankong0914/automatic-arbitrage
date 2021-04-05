@@ -9,9 +9,10 @@ services:
   #     - "5000:5000"
 
   mysql:
-    image: mysql:5.7
+    build: ./mysql/
     volumes:
-      - "./mysql:/var/lib/mysql"
+      - ./mysql/mysql_data:/var/lib/mysql
+      - ./mysql/sqls:/docker-entrypoint-initdb.d
     environment:
       - MYSQL_ROOT_PASSWORD=password
 
