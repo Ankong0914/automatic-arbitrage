@@ -2,6 +2,7 @@ from exchanges.bit_flyer import BitFlyer
 from exchanges.gmo_coin import GmoCoin
 import pandas as pd
 import time
+import asyncio
 
 
 class Arbitrage():
@@ -12,6 +13,17 @@ class Arbitrage():
         self.low_ask_exc = None
         self.LOOP_DURATION = 1.0
         self.trans_size_table = pd.read_csv("../data/transaction_size.csv")
+
+    async def update_tickers(self, exc1, exc2):  # TODO: more generalize
+        loop = asyncio.get_event_loop()
+        future1 = loop.run_in_executor(None, exc1.update_ticker)
+        future2 = loop.run_in_executor(None, exc2.update_ticker)
+        await future1
+        await future2
+
+    def send_async_requests(self, func, args):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(func(*args))
 
     def get_status(self):  # TODO: rename
         RATIO_THRES = 0.3
@@ -112,9 +124,8 @@ class Arbitrage():
         while True:
             start = time.time()
 
-            # update ticker # TODO: asyncronize
-            self.exc1.update_ticker()
-            self.exc2.update_ticker()
+            # update tickers
+            self.send_async_requests(self.update_tickers, (self.exc1, self.exc2))
 
             relation = self.get_relation()  # gap/intersection/inclusion
             if relation != "gap":
@@ -158,9 +169,8 @@ class Arbitrage():
         while True:
             start = time.time()
 
-            # update ticker # TODO: asyncronize
-            self.exc1.update_ticker()
-            self.exc2.update_ticker()
+            # update tickers
+            self.send_async_requests(self.update_tickers, (self.exc1, self.exc2))
 
             relation = self.get_relation()  # gap/intersection/inclusion
             if relation != "gap":
