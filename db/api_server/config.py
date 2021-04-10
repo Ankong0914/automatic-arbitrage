@@ -9,7 +9,7 @@ class DevelopmentConfig:
       'user': os.getenv('DB_USER', 'root'),
       'password': os.getenv('DB_PASSWORD', 'password'),
       'host': os.getenv('DB_HOST', 'mysql'),
-      'database': os.getenv('DB_DATABASE', 'hoge'),
+      'database': os.getenv('DB_DATABASE', 'arbitrage'),
     })
   SQLALCHEMY_TRACK_MODIFICATIONS = False
   SQLALCHEMY_ECHO = False

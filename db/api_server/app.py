@@ -2,7 +2,7 @@ from flask import Flask, jsonify
 from flask_restful import Api
 
 from api_server.database import init_db
-from api_server.apis.hoge import HogeListAPI, HogeAPI
+from api_server.apis.transaction import TransactionListAPI, TransactionAPI
 
 
 def create_app():
@@ -13,8 +13,8 @@ def create_app():
   init_db(app)
 
   api = Api(app)
-  api.add_resource(HogeListAPI, '/hoges')
-  api.add_resource(HogeAPI, '/hoges/<id>')
+  api.add_resource(TransactionListAPI, '/transaction')
+  api.add_resource(TransactionAPI, '/transaction/<id>')
 
   return app
 

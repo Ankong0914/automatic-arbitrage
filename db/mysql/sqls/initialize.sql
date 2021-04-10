@@ -1,2 +1,2 @@
-CREATE DATABASE hoge;
-use hoge;
+CREATE DATABASE arbitrage;
+use arbitrage;
