@@ -1,5 +1,5 @@
-from exchanges.bit_flyer import BitFlyer
-from exchanges.gmo_coin import GmoCoin
+from exchanges.coin_check import CoinCheck
+from exchanges.liquid import Liquid
 import pandas as pd
 import time
 import asyncio
@@ -96,12 +96,6 @@ class Arbitrage():
                         (self.trans_size_table["approach"] == approach)
                     ]["credit_size"].values[0]
         return trans_size
-
-    def simulated_order(self, trans_size):
-        self.high_ask_exc.jpy += self.high_ask_exc.bid * trans_size
-        self.high_ask_exc.btc -= trans_size
-        self.low_ask_exc.jpy -= self.low_ask_exc.ask * trans_size
-        self.low_ask_exc.btc += trans_size
     
     def show_trans_result(self):
         print("-------------------------------")
@@ -157,12 +151,22 @@ class Arbitrage():
             self.show_trans_result()
             self.wait_until_next_loop(start)
     
-    def simulate(self):
+
+class ArbitrageSimulator(Arbitrage):
+    def __init__(self, exc1, exc2):
+        super(ArbitrageSimulator, self).__init__(exc1, exc2)
         self.exc1.balance_yen = 250000
         self.exc1.balance_btc = 0.02
         self.exc2.balance_yen = 250000
         self.exc2.balance_btc = 0.02
+    
+    def simulated_order(self, trans_size):
+        self.high_ask_exc.balance_jpy += self.high_ask_exc.bid * trans_size
+        self.high_ask_exc.balance_btc -= trans_size
+        self.low_ask_exc.balance_jpy -= self.low_ask_exc.ask * trans_size
+        self.low_ask_exc.balance_btc += trans_size
 
+    def simulate(self):
         # update status
         status = self.get_status()
 
@@ -201,7 +205,7 @@ class Arbitrage():
 
 
 if __name__ == "__main__":
-    bf = BitFlyer()
-    gc = GmoCoin()
-    arbitrage = Arbitrage(bf, gc)
-    arbitrage.simulate()
+    cc = CoinCheck()
+    liq = Liquid()
+    arbit_sim = ArbitrageSimulator(cc, liq)
+    arbit_sim.simulate()
