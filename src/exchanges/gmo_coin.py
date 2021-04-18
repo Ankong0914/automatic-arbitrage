@@ -4,13 +4,16 @@ import requests
 import json
 import hmac
 import hashlib
+import logging
 
 from exchanges.exchange import Exchange
 
+logging.basicConfig(level=logging.INFO)
 
 class GmoCoin(Exchange):
     def __init__(self):
         super(GmoCoin, self).__init__()
+        self.logger = logging.getLogger(__name__)
         self.NAME = "GMO Coin"
         self.URL = "https://api.coin.z.com"
         self.TICKER_EP = "/v1/ticker"
@@ -26,14 +29,20 @@ class GmoCoin(Exchange):
         self.api_secret = key_conf[self.NAME]["api_secret"]
 
     def update_ticker(self, symbol="BTC"):
-        request_url = f'{self.URL}/public{self.TICKER_EP}?symbol={symbol}'
-        response = requests.get(request_url)
-        ticker = response.json()["data"][0]
+        try:
+            request_url = f'{self.URL}/public{self.TICKER_EP}?symbol={symbol}'
+            response = requests.get(request_url)
+            response.raise_for_status()
+            ticker = response.json()["data"][0]
 
-        self.bid = int(ticker["bid"])
-        self.ask = int(ticker["ask"])
-        self.spread = self.ask - self.bid
-        self.timestamp = ticker["timestamp"]
+            self.bid = int(ticker["bid"])
+            self.ask = int(ticker["ask"])
+            self.timestamp = ticker["timestamp"]
+            self.logger.info("ticker is updated")
+
+        except requests.exceptions.RequestException as e:
+            self.logger.warning("request error on updating ticker")
+            time.sleep(1)
 
     def make_headers(self, method, path, reqBody=None):
         timestamp = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))

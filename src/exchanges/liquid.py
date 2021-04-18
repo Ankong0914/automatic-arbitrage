@@ -3,9 +3,11 @@ from datetime import datetime
 import requests
 import json
 import jwt
+import logging
 
 from exchanges.exchange import Exchange
 
+logging.basicConfig(level=logging.INFO)
 
 class Liquid(Exchange):
     def __init__(self):
@@ -18,6 +20,7 @@ class Liquid(Exchange):
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0
+        self.logger = logging.getLogger(__name__)
 
         with open("exchanges/key_config.json", "r") as f:
             key_conf = json.load(f)
@@ -25,14 +28,20 @@ class Liquid(Exchange):
         self.api_secret = key_conf[self.NAME]["api_secret"]
 
     def update_ticker(self):
-        request_url = f'{self.URL}{self.TICKER_EP}'
-        response = requests.get(request_url)
-        ticker = response.json()
+        try:
+            request_url = f'{self.URL}{self.TICKER_EP}'
+            response = requests.get(request_url)
+            response.raise_for_status()
+            ticker = response.json()
 
-        self.bid = int(ticker["market_bid"])
-        self.ask = int(ticker["market_ask"])
-        self.spread = self.ask - self.bid
-        self.timestamp = ticker["timestamp"]
+            self.bid = int(ticker["market_bid"])
+            self.ask = int(ticker["market_ask"])
+            self.timestamp = ticker["timestamp"]
+            self.logger.info("ticker is updated")
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on updating ticker")
+            time.sleep(1)
 
     def make_headers(self, path):
         timestamp = datetime.now().timestamp()

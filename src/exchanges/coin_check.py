@@ -4,13 +4,17 @@ import requests
 import json
 import hmac
 import hashlib
+import logging
 
 from exchanges.exchange import Exchange
 
 
+logging.basicConfig(level=logging.INFO)
+
 class CoinCheck(Exchange):
     def __init__(self):
         super(CoinCheck, self).__init__()
+        self.logger = logging.getLogger(__name__)
         self.NAME = "Coincheck"
         self.URL = "https://coincheck.com"
         self.TICKER_EP = "/api/ticker"
@@ -26,14 +30,20 @@ class CoinCheck(Exchange):
         self.api_secret = key_conf[self.NAME]["api_secret"]
 
     def update_ticker(self):
-        request_url = f'{self.URL}{self.TICKER_EP}'
-        response = requests.get(request_url)
-        ticker = response.json()
+        try:
+            request_url = f'{self.URL}{self.TICKER_EP}'
+            response = requests.get(request_url)
+            response.raise_for_status()
+            ticker = response.json()
 
-        self.bid = int(ticker["bid"])
-        self.ask = int(ticker["ask"])
-        self.spread = self.ask - self.bid
-        self.timestamp = ticker["timestamp"]
+            self.bid = int(ticker["bid"])
+            self.ask = int(ticker["ask"])
+            self.timestamp = ticker["timestamp"]
+            self.logger.info("ticker is updated")
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on updating ticker")
+            time.sleep(1)
 
     def make_headers(self, path, reqBody=None):
         timestamp = str(int(time.time()))

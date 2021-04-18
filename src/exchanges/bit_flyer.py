@@ -3,13 +3,16 @@ import requests
 import json
 import hmac
 import hashlib
+import logging
 
 from exchanges.exchange import Exchange
 
+logging.basicConfig(level=logging.INFO)
 
 class BitFlyer(Exchange):
     def __init__(self):
         super(BitFlyer, self).__init__()
+        self.logger = logging.getLogger(__name__)
         self.NAME = "bitFlyer"
         self.URL = "https://api.bitflyer.com"
         self.TICKER_EP = "/v1/ticker"
@@ -25,14 +28,20 @@ class BitFlyer(Exchange):
         self.api_secret = key_conf[self.NAME]["api_secret"]
 
     def update_ticker(self):
-        request_url = f'{self.URL}{self.TICKER_EP}'
-        response = requests.get(request_url)
-        ticker = response.json()
+        try:
+            request_url = f'{self.URL}{self.TICKER_EP}'
+            response = requests.get(request_url)
+            response.raise_for_status()
+            ticker = response.json()
 
-        self.bid = ticker["best_bid"]
-        self.ask = ticker["best_ask"]
-        self.spread = self.ask - self.bid
-        self.timestamp = ticker["timestamp"]
+            self.bid = ticker["best_bid"]
+            self.ask = ticker["best_ask"]
+            self.timestamp = ticker["timestamp"]
+            self.logger.info("ticker is updated")
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on updating ticker")
+            time.sleep(1)
 
     def make_headers(self, method, path, body=""):
         timestamp = str(time.time())
