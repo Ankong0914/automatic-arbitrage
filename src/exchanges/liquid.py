@@ -7,7 +7,7 @@ import logging
 
 from exchanges.exchange import Exchange
 
-logging.basicConfig(level=logging.INFO)
+# logging.basicConfig(level=logging.INFO)
 
 class Liquid(Exchange):
     def __init__(self):
@@ -42,6 +42,7 @@ class Liquid(Exchange):
         except requests.exceptions.RequestException as e:
             self.logger.error("request error on updating ticker")
             time.sleep(1)
+            raise
 
     def make_headers(self, path):
         timestamp = datetime.now().timestamp()

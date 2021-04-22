@@ -44,6 +44,7 @@ class CoinCheck(Exchange):
         except requests.exceptions.RequestException as e:
             self.logger.error("request error on updating ticker")
             time.sleep(1)
+            raise
 
     def make_headers(self, path, reqBody=None):
         timestamp = str(int(time.time()))
