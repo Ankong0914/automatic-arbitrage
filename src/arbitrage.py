@@ -3,17 +3,21 @@ from exchanges.liquid import Liquid
 import pandas as pd
 import time
 import asyncio
+import logging
+import requests
+import csv
 
+# logging.basicConfig(level=logging.INFO)
 
 class Arbitrage():
     def __init__(self, exc1, exc2):
+        self.logger = logging.getLogger(__name__)
         self.exc1 = exc1
         self.exc2 = exc2
         self.high_ask_exc = None
         self.low_ask_exc = None
         self.LOOP_DURATION = 1.0 # TODO
         self.MIN_TRANS_UNIT = min([self.exc1.MIN_TRANS_UNIT, self.exc2.MIN_TRANS_UNIT])
-        self.logger = logging.getLogger(__name__)
 
     async def update_tickers(self, exc1, exc2):  # TODO: more generalize
         loop = asyncio.get_event_loop()
@@ -139,6 +143,12 @@ class ArbitrageSimulator(Arbitrage):
         self.exc2.ask = tickers[1].ask
         self.exc2.bid = tickers[1].bid
         self.exc2.timestamp = tickers[1].timestamp
+    
+    def record_order(self):
+        with open("../data/order_record.csv", "a") as f:
+            w = csv.writer(f, delimiter=",")
+            profit = int(self.exc1.balance_jpy + self.exc2.balance_jpy - 500000)
+            w.writerow([profit, self.exc2.timestamp])
 
     def simulate(self):
         charts_iter = zip(self.chart[self.exc1.NAME].itertuples(), self.chart[self.exc2.NAME].itertuples())
@@ -151,7 +161,6 @@ class ArbitrageSimulator(Arbitrage):
                 continue
 
             margin = self.calc_margin()
-            print(margin)
             margin_type = self.get_margin_type(margin)  # little ~ ultra
             if margin_type == "little":
                 continue
@@ -163,7 +172,42 @@ class ArbitrageSimulator(Arbitrage):
             self.simulated_order(size)
             profit = int(self.exc1.balance_jpy + self.exc2.balance_jpy - 500000)
             print(profit, margin_type, size, self.exc1.balance_btc, self.exc2.balance_btc)
-    
+        
+    def simulate_realtime(self):
+        while True:
+            start = time.time()
+
+            # update tickers
+            try:
+                self.send_async_requests(self.update_tickers, (self.exc1, self.exc2))
+            except requests.exceptions.RequestException as e:
+                self.wait_until_next_loop(start)
+                continue
+
+            relation = self.get_relation()  # gap/intersection/inclusion
+            if relation != "gap":
+                self.wait_until_next_loop(start)
+                continue
+
+            margin = self.calc_margin()
+            margin_type = self.get_margin_type(margin)  # little ~ huge
+            if margin_type == "little":
+                self.wait_until_next_loop(start)
+                continue
+
+            size = self.get_size(margin_type) 
+            if size == 0:
+                self.wait_until_next_loop(start)
+                continue
+
+            self.simulated_order(size)
+            self.record_order()
+
+            # get balance TODO: asyncronize
+            self.exc1.update_balance() # need not do this here
+            self.exc2.update_balance()
+
+            self.wait_until_next_loop(start)
 
 
 if __name__ == "__main__":
