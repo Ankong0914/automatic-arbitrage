@@ -3,16 +3,13 @@ from datetime import datetime
 import requests
 import json
 import jwt
-import logging
 
 from exchanges.exchange import Exchange
 
-# logging.basicConfig(level=logging.INFO)
 
 class Liquid(Exchange):
     def __init__(self):
-        super(Liquid, self).__init__()
-        self.NAME = "Liquid"
+        super(Liquid, self).__init__("Liquid")
         self.URL = "https://api.liquid.com"
         self.TICKER_EP = "/products/5"
         self.BALANCE_EP = "/accounts/balance"
@@ -20,7 +17,6 @@ class Liquid(Exchange):
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0
-        self.logger = logging.getLogger(__name__)
 
         with open("exchanges/key_config.json", "r") as f:
             key_conf = json.load(f)

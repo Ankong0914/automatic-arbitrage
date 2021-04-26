@@ -4,17 +4,13 @@ import requests
 import json
 import hmac
 import hashlib
-import logging
 
 from exchanges.exchange import Exchange
 
-logging.basicConfig(level=logging.INFO)
 
 class GmoCoin(Exchange):
     def __init__(self):
-        super(GmoCoin, self).__init__()
-        self.logger = logging.getLogger(__name__)
-        self.NAME = "GMO Coin"
+        super(GmoCoin, self).__init__("GMO Coin")
         self.URL = "https://api.coin.z.com"
         self.TICKER_EP = "/v1/ticker"
         self.BALANCE_EP = "/v1/account/assets"

@@ -3,17 +3,13 @@ import requests
 import json
 import hmac
 import hashlib
-import logging
 
 from exchanges.exchange import Exchange
 
-logging.basicConfig(level=logging.INFO)
 
 class BitFlyer(Exchange):
     def __init__(self):
-        super(BitFlyer, self).__init__()
-        self.logger = logging.getLogger(__name__)
-        self.NAME = "bitFlyer"
+        super(BitFlyer, self).__init__("bitFlyer")
         self.URL = "https://api.bitflyer.com"
         self.TICKER_EP = "/v1/ticker"
         self.BALANCE_EP = "/v1/me/getbalance"

@@ -4,18 +4,13 @@ import requests
 import json
 import hmac
 import hashlib
-import logging
 
 from exchanges.exchange import Exchange
 
 
-logging.basicConfig(level=logging.INFO)
-
 class CoinCheck(Exchange):
     def __init__(self):
-        super(CoinCheck, self).__init__()
-        self.logger = logging.getLogger(__name__)
-        self.NAME = "Coincheck"
+        super(CoinCheck, self).__init__("Coincheck")
         self.URL = "https://coincheck.com"
         self.TICKER_EP = "/api/ticker"
         self.BALANCE_EP = "/api/accounts/balance"
