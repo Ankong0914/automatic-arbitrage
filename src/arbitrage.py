@@ -203,10 +203,6 @@ class ArbitrageSimulator(Arbitrage):
             self.simulated_order(size)
             self.record_order()
 
-            # get balance TODO: asyncronize
-            self.exc1.update_balance() # need not do this here
-            self.exc2.update_balance()
-
             self.wait_until_next_loop(start)
 
 
@@ -214,4 +210,4 @@ if __name__ == "__main__":
     cc = CoinCheck()
     liq = Liquid()
     arbit_sim = ArbitrageSimulator(cc, liq)
-    arbit_sim.simulate()
+    arbit_sim.simulate_realtime()
