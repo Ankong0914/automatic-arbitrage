@@ -14,7 +14,7 @@ class CoinCheck(Exchange):
         self.URL = "https://coincheck.com"
         self.TICKER_EP = "/api/ticker"
         self.BALANCE_EP = "/api/accounts/balance"
-        self.ORDER_EP = ""
+        self.ORDER_EP = "/api/exchange/orders"
         self.MIN_TRANS_UNIT = 0.005
         self.REMITTANCE_CHARGE_RATE = 0.001
         self.TRANS_CHARGE_RATE = 0
@@ -71,15 +71,12 @@ class CoinCheck(Exchange):
         self.balance_btc = float(balance["btc"])
 
     def post_order(self, side, size):
-        request_url = f'{self.URL}/private{self.ORDER_EP}'
+        request_url = f'{self.URL}{self.ORDER_EP}'
         reqBody = {
-            "symbol": "BTC",
-            "side": side,
-            "executionType": "MARKET",
-            "size": size
+            "pair": "btc_jpy",
+            "order_type": side,
+            "market_buy_amount": size,
         }
-        headers = self.make_headers("POST", self.ORDER_EP, reqBody)
+        headers = self.make_headers(request_url, reqBody)
         response = requests.post(request_url, headers=headers, data=json.dumps(reqBody))
-        print(json.dumps(response.json(), indent=2))
-
-
+        print(json.dumps(response.json()))

@@ -13,7 +13,7 @@ class Liquid(Exchange):
         self.URL = "https://api.liquid.com"
         self.TICKER_EP = "/products/5"
         self.BALANCE_EP = "/accounts/balance"
-        self.ORDER_EP = ""
+        self.ORDER_EP = "/orders/"
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0
@@ -68,16 +68,18 @@ class Liquid(Exchange):
             elif currency_data["currency"] == "BTC":
                 self.balance_btc = float(currency_data["balance"])
 
-    # def post_order(self, side, size):
-    #     request_url = f'{self.URL}/private{self.ORDER_EP}'
-    #     reqBody = {
-    #         "symbol": "BTC",
-    #         "side": side,
-    #         "executionType": "MARKET",
-    #         "size": size
-    #     }
-    #     headers = self.make_headers("POST", self.ORDER_EP, reqBody)
-    #     response = requests.post(request_url, headers=headers, data=json.dumps(reqBody))
-    #     print(json.dumps(response.json(), indent=2))
+    def post_order(self, side, size):
+        request_url = f'{self.URL}{self.ORDER_EP}'
+        body = {
+            "order": {
+                "order_type": "market",
+                "product_id": 5,
+                "side": side,
+                "quantity": str(size)
+            }
+        }
+        headers = self.make_headers(self.ORDER_EP)
+        response = requests.post(request_url, headers=headers, data=json.dumps(body))
+        print(json.dumps(response.json()))
 
 
