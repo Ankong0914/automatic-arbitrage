@@ -5,7 +5,7 @@ import json
 import jwt
 
 from exchanges.exchange import Exchange
-
+from lib.api_request import http_get, http_post
 
 class Liquid(Exchange):
     def __init__(self):
@@ -25,8 +25,8 @@ class Liquid(Exchange):
 
     def update_ticker(self):
         try:
-            request_url = f'{self.URL}{self.TICKER_EP}'
-            response = requests.get(request_url)
+            url = f'{self.URL}{self.TICKER_EP}'
+            response = requests.get(url)
             response.raise_for_status()
             ticker = response.json()
 
@@ -37,7 +37,6 @@ class Liquid(Exchange):
 
         except requests.exceptions.RequestException as e:
             self.logger.error("request error on updating ticker")
-            time.sleep(1)
             raise
 
     def make_headers(self, path):
@@ -57,29 +56,44 @@ class Liquid(Exchange):
         return headers
 
     def update_balance(self):
-        request_url = f'{self.URL}{self.BALANCE_EP}'
-        headers = self.make_headers(self.BALANCE_EP)
-        response = requests.get(request_url, headers=headers)
-        balance = response.json()
+        try:
+            url = f'{self.URL}{self.BALANCE_EP}'
+            headers = self.make_headers(self.BALANCE_EP)
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            balance = response.json()
 
-        for currency_data in balance:
-            if currency_data["currency"] == "JPY":
-                self.balance_jpy = int(float(currency_data["balance"]))
-            elif currency_data["currency"] == "BTC":
-                self.balance_btc = float(currency_data["balance"])
+            for currency_data in balance:
+                if currency_data["currency"] == "JPY":
+                    self.balance_jpy = int(float(currency_data["balance"]))
+                elif currency_data["currency"] == "BTC":
+                    self.balance_btc = float(currency_data["balance"])
+            self.logger.info("balance is updated")
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on updating balance")
+            raise
+
 
     def post_order(self, side, size):
-        request_url = f'{self.URL}{self.ORDER_EP}'
-        body = {
-            "order": {
-                "order_type": "market",
-                "product_id": 5,
-                "side": side,
-                "quantity": str(size)
+        try:
+            request_url = f'{self.URL}{self.ORDER_EP}'
+            body = {
+                "order": {
+                    "order_type": "market",
+                    "product_id": 5,
+                    "side": side,
+                    "quantity": str(size)
+                }
             }
-        }
-        headers = self.make_headers(self.ORDER_EP)
-        response = requests.post(request_url, headers=headers, data=json.dumps(body))
-        print(json.dumps(response.json()))
+            headers = self.make_headers(self.ORDER_EP)
+            response = requests.post(url, headers=headers, data=json.dumps(body))
+            response.raise_for_status()
+            self.logger.info("order is successfully constracted")
+            print(json.dumps(response.json()))
+            
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on posting an order")
+            raise
 
 

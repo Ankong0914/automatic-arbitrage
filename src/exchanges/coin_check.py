@@ -26,8 +26,8 @@ class CoinCheck(Exchange):
 
     def update_ticker(self):
         try:
-            request_url = f'{self.URL}{self.TICKER_EP}'
-            response = requests.get(request_url)
+            url = f'{self.URL}{self.TICKER_EP}'
+            response = requests.get(url)
             response.raise_for_status()
             ticker = response.json()
 
@@ -38,16 +38,15 @@ class CoinCheck(Exchange):
 
         except requests.exceptions.RequestException as e:
             self.logger.error("request error on updating ticker")
-            time.sleep(1)
             raise
 
-    def make_headers(self, path, reqBody=None):
+    def make_headers(self, path, body=None):
         timestamp = str(int(time.time()))
-        if reqBody is not None:
-            reqBody = json.dumps(reqBody)
+        if body is not None:
+            body = json.dumps(body)
         else:
-            reqBody = ''
-        text = timestamp + path + reqBody
+            body = ''
+        text = timestamp + path + body
         sign = hmac.new(
             bytes(self.api_secret.encode('ascii')),
             bytes(text.encode('ascii')),
@@ -62,21 +61,35 @@ class CoinCheck(Exchange):
         return headers
 
     def update_balance(self):
-        request_url = f'{self.URL}{self.BALANCE_EP}'
-        headers = self.make_headers(request_url)
-        response = requests.get(request_url, headers=headers)
-        balance = response.json()
+        try:
+            url = f'{self.URL}{self.BALANCE_EP}'
+            headers = self.make_headers(url)
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            balance = response.json()
 
-        self.balance_jpy = int(balance["jpy"])
-        self.balance_btc = float(balance["btc"])
+            self.balance_jpy = int(balance["jpy"])
+            self.balance_btc = float(balance["btc"])
+            self.logger.info("balance is updated")
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on updating balance")
+            raise
 
     def post_order(self, side, size):
-        request_url = f'{self.URL}{self.ORDER_EP}'
-        reqBody = {
-            "pair": "btc_jpy",
-            "order_type": side,
-            "market_buy_amount": size,
-        }
-        headers = self.make_headers(request_url, reqBody)
-        response = requests.post(request_url, headers=headers, data=json.dumps(reqBody))
-        print(json.dumps(response.json()))
+        try:
+            url = f'{self.URL}{self.ORDER_EP}'
+            body = {
+                "pair": "btc_jpy",
+                "order_type": side,
+                "market_buy_amount": size,
+            }
+            headers = self.make_headers(url, body)
+            response = requests.post(request_url, headers=headers, data=json.dumps(body))
+            response.raise_for_status()
+            self.logger.info("order is successfully constracted")
+            print(json.dumps(response.json()))
+        
+        except:
+            self.logger.error("request error on posting an order")
+            raise

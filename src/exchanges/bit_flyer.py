@@ -25,8 +25,8 @@ class BitFlyer(Exchange):
 
     def update_ticker(self):
         try:
-            request_url = f'{self.URL}{self.TICKER_EP}'
-            response = requests.get(request_url)
+            url = f'{self.URL}{self.TICKER_EP}'
+            response = requests.get(url)
             response.raise_for_status()
             ticker = response.json()
 
@@ -37,7 +37,7 @@ class BitFlyer(Exchange):
 
         except requests.exceptions.RequestException as e:
             self.logger.error("request error on updating ticker")
-            time.sleep(1)
+            raise
 
     def make_headers(self, method, path, body=""):
         timestamp = str(time.time())
@@ -56,13 +56,21 @@ class BitFlyer(Exchange):
         return headers
 
     def update_balance(self):
-        request_url = f'{self.URL}{self.BALANCE_EP}'
-        headers = self.make_headers("GET", self.BALANCE_EP)
-        response = requests.get(request_url, headers=headers)
-        balance = response.json()
+        try:
+            url = f'{self.URL}{self.BALANCE_EP}'
+            headers = self.make_headers("GET", self.BALANCE_EP)
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            balance = response.json()
 
-        for currency_data in balance:
-            if currency_data["currency_code"] == "JPY":
-                self.balance_jpy = int(currency_data["amount"])
-            elif currency_data["currency_code"] == "BTC":
-                self.balance_btc = currency_data["amount"]
+            for currency_data in balance:
+                if currency_data["currency_code"] == "JPY":
+                    self.balance_jpy = int(currency_data["amount"])
+                elif currency_data["currency_code"] == "BTC":
+                    self.balance_btc = currency_data["amount"]
+            self.logger.info("balance is updated")
+        
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on updating balance")
+            raise
+
