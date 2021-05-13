@@ -1,4 +1,7 @@
 __pycache__
+.DS_Store
 data
 key_config.json
 db/mysql/mysql_data
+db/api_server/migrations
+db/api_server/models
