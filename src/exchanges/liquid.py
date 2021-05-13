@@ -5,7 +5,6 @@ import json
 import jwt
 
 from exchanges.exchange import Exchange
-from lib.api_request import http_get, http_post
 
 class Liquid(Exchange):
     def __init__(self):
@@ -74,10 +73,9 @@ class Liquid(Exchange):
             self.logger.error("request error on updating balance")
             raise
 
-
     def post_order(self, side, size):
         try:
-            request_url = f'{self.URL}{self.ORDER_EP}'
+            url = f'{self.URL}{self.ORDER_EP}'
             body = {
                 "order": {
                     "order_type": "market",

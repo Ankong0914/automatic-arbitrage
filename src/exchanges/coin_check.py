@@ -40,13 +40,13 @@ class CoinCheck(Exchange):
             self.logger.error("request error on updating ticker")
             raise
 
-    def make_headers(self, path, body=None):
+    def make_headers(self, url, body=None):
         timestamp = str(int(time.time()))
         if body is not None:
             body = json.dumps(body)
         else:
             body = ''
-        text = timestamp + path + body
+        text = timestamp + url + body
         sign = hmac.new(
             bytes(self.api_secret.encode('ascii')),
             bytes(text.encode('ascii')),
@@ -68,7 +68,7 @@ class CoinCheck(Exchange):
             response.raise_for_status()
             balance = response.json()
 
-            self.balance_jpy = int(balance["jpy"])
+            self.balance_jpy = float(balance["jpy"])
             self.balance_btc = float(balance["btc"])
             self.logger.info("balance is updated")
 
@@ -85,7 +85,7 @@ class CoinCheck(Exchange):
                 "market_buy_amount": size,
             }
             headers = self.make_headers(url, body)
-            response = requests.post(request_url, headers=headers, data=json.dumps(body))
+            response = requests.post(url, headers=headers, data=json.dumps(body))
             response.raise_for_status()
             self.logger.info("order is successfully constracted")
             print(json.dumps(response.json()))
