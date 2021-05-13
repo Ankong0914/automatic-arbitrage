@@ -40,7 +40,7 @@ class GmoCoin(Exchange):
             self.logger.warning("request error on updating ticker")
             raise
 
-    def make_headers(self, method, path, body=None):
+    def generate_headers(self, method, path, body=None):
         timestamp = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
         if body is not None:
             body = json.dumps(body)
@@ -62,7 +62,7 @@ class GmoCoin(Exchange):
     def update_balance(self):
         try:
             url = f'{self.URL}/private{self.BALANCE_EP}'
-            headers = self.make_headers("GET", self.BALANCE_EP)
+            headers = self.generate_headers("GET", self.BALANCE_EP)
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             balance = response.json()["data"]
@@ -78,7 +78,7 @@ class GmoCoin(Exchange):
             self.logger.error("request error on updating balance")
             raise
 
-    def post_order(self, side, size):
+    def send_order(self, side, size):
         try:
             url = f'{self.URL}/private{self.ORDER_EP}'
             body = {
@@ -87,7 +87,7 @@ class GmoCoin(Exchange):
                 "executionType": "MARKET",
                 "size": size
             }
-            headers = self.make_headers("POST", self.ORDER_EP, body)
+            headers = self.generate_headers("POST", self.ORDER_EP, body)
             response = requests.post(url, headers=headers, data=json.dumps(body))
             response.raise_for_status()
             print(json.dumps(response.json(), indent=2))
@@ -95,7 +95,13 @@ class GmoCoin(Exchange):
         except requests.exceptions.RequestException as e:
             self.logger.error("request error on posting an order")
             raise
+    
+    def send_buy_order(self, size):
+        side = "BUY"
+        size = str(size)
+        self.send_order(side, size)
 
-if __name__ == "__main__":
-    gc = GmoCoin()
-
+    def send_sell_order(self, size):
+        side = "SELL"
+        size = str(size)
+        self.send_order(side, size)

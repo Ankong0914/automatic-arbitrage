@@ -39,7 +39,7 @@ class BitFlyer(Exchange):
             self.logger.error("request error on updating ticker")
             raise
 
-    def make_headers(self, method, path, body=""):
+    def generate_headers(self, method, path, body=""):
         timestamp = str(time.time())
         text = timestamp + method + path + body
         sign = hmac.new(
@@ -58,7 +58,7 @@ class BitFlyer(Exchange):
     def update_balance(self):
         try:
             url = f'{self.URL}{self.BALANCE_EP}'
-            headers = self.make_headers("GET", self.BALANCE_EP)
+            headers = self.generate_headers("GET", self.BALANCE_EP)
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             balance = response.json()

@@ -38,7 +38,7 @@ class Liquid(Exchange):
             self.logger.error("request error on updating ticker")
             raise
 
-    def make_headers(self, path):
+    def generate_headers(self, path):
         timestamp = datetime.now().timestamp()
         payload = {
             "path": path,
@@ -57,7 +57,7 @@ class Liquid(Exchange):
     def update_balance(self):
         try:
             url = f'{self.URL}{self.BALANCE_EP}'
-            headers = self.make_headers(self.BALANCE_EP)
+            headers = self.generate_headers(self.BALANCE_EP)
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             balance = response.json()
@@ -73,7 +73,7 @@ class Liquid(Exchange):
             self.logger.error("request error on updating balance")
             raise
 
-    def post_order(self, side, size):
+    def send_order(self, side, size):
         try:
             url = f'{self.URL}{self.ORDER_EP}'
             body = {
@@ -84,7 +84,7 @@ class Liquid(Exchange):
                     "quantity": str(size)
                 }
             }
-            headers = self.make_headers(self.ORDER_EP)
+            headers = self.generate_headers(self.ORDER_EP)
             response = requests.post(url, headers=headers, data=json.dumps(body))
             response.raise_for_status()
             self.logger.info("order is successfully constracted")
@@ -94,4 +94,10 @@ class Liquid(Exchange):
             self.logger.error("request error on posting an order")
             raise
 
+    def send_buy_order(self, size):
+        side = "buy"
+        self.send_order(side, size)
 
+    def send_sell_order(self, size):
+        side = "sell"
+        self.send_order(side, size)

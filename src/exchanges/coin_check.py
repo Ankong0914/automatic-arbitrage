@@ -40,7 +40,7 @@ class CoinCheck(Exchange):
             self.logger.error("request error on updating ticker")
             raise
 
-    def make_headers(self, url, body=None):
+    def generate_headers(self, url, body=None):
         timestamp = str(int(time.time()))
         if body is not None:
             body = json.dumps(body)
@@ -63,7 +63,7 @@ class CoinCheck(Exchange):
     def update_balance(self):
         try:
             url = f'{self.URL}{self.BALANCE_EP}'
-            headers = self.make_headers(url)
+            headers = self.generate_headers(url)
             response = requests.get(url, headers=headers)
             response.raise_for_status()
             balance = response.json()
@@ -76,7 +76,7 @@ class CoinCheck(Exchange):
             self.logger.error("request error on updating balance")
             raise
 
-    def post_order(self, side, size):
+    def send_order(self, side, size):
         try:
             url = f'{self.URL}{self.ORDER_EP}'
             body = {
@@ -84,7 +84,7 @@ class CoinCheck(Exchange):
                 "order_type": side,
                 "market_buy_amount": size,
             }
-            headers = self.make_headers(url, body)
+            headers = self.generate_headers(url, body)
             response = requests.post(url, headers=headers, data=json.dumps(body))
             response.raise_for_status()
             self.logger.info("order is successfully constracted")
@@ -93,3 +93,14 @@ class CoinCheck(Exchange):
         except:
             self.logger.error("request error on posting an order")
             raise
+    
+    def send_buy_order(self, size):
+        side = "market_buy"
+        size_jpy = size * self.ask  # Coincheck api allows size of jpy only 
+        self.send_order(side, size_jpy)
+
+    def send_sell_order(self, size):
+        side = "market_sell"
+        size_jpy = size * self.bid  # Coincheck api allows size of jpy only 
+        self.send_order(side, size_jpy)
+        
