@@ -2,6 +2,7 @@ from exchanges.coin_check import CoinCheck
 from exchanges.liquid import Liquid
 import pandas as pd
 import time
+import datetime
 import asyncio
 import logging
 import requests
@@ -84,7 +85,32 @@ class Arbitrage():
         # order TODO: asyncronize
         self.high_ask_exc.post_sell_order(size)
         self.low_ask_exc.post_buy_order(size)
+    
+    def show_contract_result(self):
+        result = {}
 
+        now = datetime.datetime.now()
+        result["timestamp"] = now.strftime("%Y/%m/%d-%H:%M:%S")
+
+        buy_result = self.low_ask_exc.contract_result
+        buy_exc = self.low_ask_exc.NAME
+        result["buy"] = f"{int(buy_result['price'])} jpy / {buy_result['size']} @ {buy_exc}"
+
+        sell_result = self.high_ask_exc.contract_result
+        sell_exc = self.high_ask_exc.NAME
+        result["sell"] = f"{int(sell_result['price'])} jpy / {sell_result['size']} @ {sell_exc}"
+
+        margin = sell_result["price"] - buy_result["price"]
+        size_diff = size_diff = round(buy_result["size"] - sell_result["size"], 7)
+        result["margin"] = f"{int(margin)} ({size_diff} btc)"
+
+        # print contract result
+        key_width = max([len(key) for key in result.keys()])
+        print("="*50)
+        for key, value in result.items():
+            print(f"{key.ljust(key_width)}: {value}")
+        print("*"*50)
+ 
     def wait_until_next_loop(self, start):
         end = time.time()
         time.sleep(max(0, self.LOOP_DURATION - (end - start)))
@@ -117,6 +143,8 @@ class Arbitrage():
             # get balance TODO: asyncronize
             self.exc1.update_balance() # need not do this here
             self.exc2.update_balance()
+
+            self.show_contract_result()
 
             self.wait_until_next_loop(start)
     
