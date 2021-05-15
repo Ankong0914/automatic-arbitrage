@@ -79,6 +79,11 @@ class Arbitrage():
         if size < self.MIN_TRANS_UNIT:
             size = 0
         return size
+    
+    def make_simul_transactions(size):
+        # order TODO: asyncronize
+        self.high_ask_exc.post_sell_order(size)
+        self.low_ask_exc.post_buy_order(size)
 
     def wait_until_next_loop(self, start):
         end = time.time()
@@ -107,9 +112,7 @@ class Arbitrage():
                 self.wait_until_next_loop(start)
                 continue
 
-            # order TODO: asyncronize
-            # self.high_ask_exc.post_order("SELL", size)
-            # self.low_ask_exc.post_order("BUY", size)
+            self.make_simul_transactions(size)
 
             # get balance TODO: asyncronize
             self.exc1.update_balance() # need not do this here
