@@ -13,6 +13,7 @@ class Liquid(Exchange):
         self.TICKER_EP = "/products/5"
         self.BALANCE_EP = "/accounts/balance"
         self.ORDER_EP = "/orders/"
+        self.TRANS_EP = "/executions/me"
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0
@@ -73,6 +74,38 @@ class Liquid(Exchange):
             self.logger.error("request error on updating balance")
             raise
 
+    def get_transactions(self):
+        try:
+            url = f'{self.URL}{self.TRANS_EP}?product_id=5'
+            headers = self.generate_headers(f"{self.TRANS_EP}?product_id=5")
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            self.logger.info("transactions are collectly got")
+            transactions = response.json()["models"]
+            return transactions
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on getting transactions")
+            raise
+
+    def get_transactions_from_id(self, id):
+        all_transactions = self.get_transactions()
+        transactions = [transaction for transaction in all_transactions if transaction["order_id"] == id]
+        return transactions
+
+    def pick_transactions_info(self, transactions):
+        trans_result = []
+        for transaction  in transactions:
+            trans_info = {
+                "id": transaction["id"],
+                "timestamp": transaction["timestamp"],
+                "side": transaction["my_side"],
+                "size": float(transaction["quantity"]),
+                "price": float(transaction["price"])
+            }
+            trans_result.append(trans_info)
+        return trans_result
+
     def send_order(self, side, size):
         try:
             url = f'{self.URL}{self.ORDER_EP}'
@@ -88,16 +121,23 @@ class Liquid(Exchange):
             response = requests.post(url, headers=headers, data=json.dumps(body))
             response.raise_for_status()
             self.logger.info("order is successfully constracted")
-            print(json.dumps(response.json()))
-            
+
+            order_id = response.json()["id"]
+    
         except requests.exceptions.RequestException as e:
             self.logger.error("request error on posting an order")
             raise
 
+        else:
+            self.update_balance()
+            transaction = self.get_transactions_from_id(order_id)
+            trans_result = self.pick_transactions_info(transactions)
+            return trans_result
+
     def send_buy_order(self, size):
         side = "buy"
-        self.send_order(side, size)
+        trans_result = self.send_order(side, size)
 
     def send_sell_order(self, size):
         side = "sell"
-        self.send_order(side, size)
+        trans_result = self.send_order(side, size)

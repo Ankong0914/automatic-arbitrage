@@ -15,6 +15,7 @@ class CoinCheck(Exchange):
         self.TICKER_EP = "/api/ticker"
         self.BALANCE_EP = "/api/accounts/balance"
         self.ORDER_EP = "/api/exchange/orders"
+        self.TRANS_EP = "/api/exchange/orders/transactions"
         self.MIN_TRANS_UNIT = 0.005
         self.REMITTANCE_CHARGE_RATE = 0.001
         self.TRANS_CHARGE_RATE = 0
@@ -75,6 +76,38 @@ class CoinCheck(Exchange):
         except requests.exceptions.RequestException as e:
             self.logger.error("request error on updating balance")
             raise
+    
+    def get_transactions(self):
+        try:
+            url = f'{self.URL}{self.TRANS_EP}'
+            headers = self.generate_headers(url)
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()
+            self.logger.info("transactions are collectly got")
+            transactions = response.json()["transactions"]
+            return transactions
+
+        except requests.exceptions.RequestException as e:
+            self.logger.error("request error on getting transactions")
+            raise
+    
+    def get_transactions_from_id(self, id):
+        all_transactions = self.get_transactions()
+        transactions = [transaction for transaction in all_transactions if transaction["order_id"] == id]
+        return transactions
+    
+    def pick_transactions_info(self, transactions):
+        trans_result = []
+        for transaction  in transactions:
+            trans_info = {
+                "id": transaction["id"],
+                "timestamp": transaction["created_at"],
+                "side": transaction["side"],
+                "size": abs(float(transaction["funds"]["btc"])),
+                "price": float(transaction["rate"])
+            }
+            trans_result.append(trans_info)
+        return trans_result
 
     def send_order(self, side, size):
         try:
@@ -88,19 +121,26 @@ class CoinCheck(Exchange):
             response = requests.post(url, headers=headers, data=json.dumps(body))
             response.raise_for_status()
             self.logger.info("order is successfully constracted")
-            print(json.dumps(response.json()))
+
+            order_id = response.json()["id"]
         
-        except:
+        except requests.exceptions.RequestException as e:
             self.logger.error("request error on posting an order")
             raise
+
+        else:
+            self.update_balance()
+            transaction = self.get_transactions_from_id(order_id)
+            trans_result = self.pick_transactions_info(transactions)
+            return trans_result
     
     def send_buy_order(self, size):
         side = "market_buy"
         size_jpy = size * self.ask  # Coincheck api allows size of jpy only 
-        self.send_order(side, size_jpy)
+        trans_result = self.send_order(side, size_jpy)
 
     def send_sell_order(self, size):
         side = "market_sell"
         size_jpy = size * self.bid  # Coincheck api allows size of jpy only 
-        self.send_order(side, size_jpy)
+        trans_result = self.send_order(side, size_jpy)
         
