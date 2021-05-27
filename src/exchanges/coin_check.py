@@ -17,7 +17,7 @@ class CoinCheck(Exchange):
     def gen_order_body(self, side, size):
         if side == "market_buy":
             size_jpy = size * self.ticker["ask"]
-        elif side == "market_sell"
+        elif side == "market_sell":
             size_jpy = size * self.ticker["bid"]
         else:
             self.logger.error("unexpected side is set")

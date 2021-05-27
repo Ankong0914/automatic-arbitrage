@@ -90,5 +90,5 @@
             "sell": "market_sell",
             "buy": "market_buy"
         }
-    },
+    }
 }
