@@ -106,7 +106,6 @@ class Exchange:
         headers = self.generate_headers(path, method=method, body=body)
         result = self.request_api(url, headers=headers, body=body) 
 
-        self.fetch_balance()
         order_id = result["id"]
         transactions = self.get_transactions_from_id(order_id)
         trans_result = self.pick_transactions_info(transactions)
