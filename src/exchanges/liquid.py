@@ -1,7 +1,4 @@
-import time
 from datetime import datetime
-import requests
-import json
 import jwt
 
 from exchanges.exchange import Exchange
@@ -49,15 +46,8 @@ class Liquid(Exchange):
         }
         return body
 
-    def get_transactions(self):
-        conf = self.api_conf["transactions"]
-        url, method, path = conf["url"], conf["method"], conf["path"]
-        headers = self.generate_headers(path)
-        transactions = self.request_api(url, headers=headers)["models"]
-        return transactions
-
     def get_transactions_from_id(self, id):
-        all_transactions = self.get_transactions()
+        all_transactions = self.get_transactions()["models"]
         transactions = [transaction for transaction in all_transactions if transaction["order_id"] == id]
         return transactions
 

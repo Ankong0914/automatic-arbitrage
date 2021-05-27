@@ -74,15 +74,22 @@ class Exchange:
         ticker = self.request_api(url)
         self.update_ticker(ticker)
 
-    def update_balance(self, balances):
+    def update_balance(self, balance):
         pass
 
     def fetch_balance(self):
         conf = self.api_conf["balance"]
         url, method, path = conf["url"], conf["method"], conf["path"]
         headers = self.generate_headers(path, method=method)
-        balances = self.request_api(url, headers=headers)
-        self.update_balance(balances)
+        balance = self.request_api(url, headers=headers)
+        self.update_balance(balance)
+    
+    def get_transactions(self):
+        conf = self.api_conf["transactions"]
+        url, method, path = conf["url"], conf["method"], conf["path"]
+        headers = self.generate_headers(path, method=method)
+        transactions = self.request_api(url, headers=headers)
+        return transactions
 
     def gen_order_body(self, side, size):
         pass

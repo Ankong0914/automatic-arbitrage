@@ -1,0 +1,94 @@
+{
+    "Exchange":{
+        "auth":{
+            "access_key_key": "",
+            "access_timestamp_key": "",
+            "access_sign_key": ""
+        },
+        "ticker":{
+            "url": "",
+            "ask_key": "",
+            "bid_key": "",
+            "timestamp_key": ""
+        },
+        "balance": {
+            "url": "",
+            "path": "",
+            "method": ""
+        },
+        "transactions": {
+            "url": "",
+            "path": "",
+            "method": ""
+        },
+        "order": {
+            "url": "",
+            "path": "",
+            "method": "",
+            "sell": "",
+            "buy": ""
+        }
+    },
+
+    "Liquid": {
+        "auth":{
+            "access_key_key": "",
+            "access_timestamp_key": "",
+            "access_sign_key": ""
+        },
+        "ticker":{
+            "url": "https://api.liquid.com/products/5",
+            "ask_key": "market_ask",
+            "bid_key": "market_bid",
+            "timestamp_key": "timestamp"
+        },
+        "balance": {
+            "url": "https://api.liquid.com/accounts/balance",
+            "path": "/accounts/balance",
+            "method": ""
+        },
+        "transactions": {
+            "url": "https://api.liquid.com/executions/me?product_id=5",
+            "path": "/executions/me?product_id=5",
+            "method": ""
+        },
+        "order": {
+            "url": "https://api.liquid.com/orders/",
+            "path": "/orders/",
+            "method": "",
+            "sell": "sell",
+            "buy": "buy"
+        }
+    }, 
+    
+    "Coincheck":{
+        "auth":{
+            "access_key_key": "ACCESS-KEY",
+            "access_timestamp_key": "ACCESS-NONCE",
+            "access_sign_key": "ACCESS-SIGNATURE"
+        },
+        "ticker":{
+            "url": "https://coincheck.com/api/ticker",
+            "ask_key": "ask",
+            "bid_key": "bid",
+            "timestamp_key": "timestamp"
+        },
+        "balance": {
+            "url": "https://coincheck.com/api/accounts/balance",
+            "path": "https://coincheck.com/api/accounts/balance",
+            "method": ""
+        },
+        "transactions": {
+            "url": "https://coincheck.com/api/exchange/orders/transactions",
+            "path": "https://coincheck.com/api/exchange/orders/transactions",
+            "method": ""
+        },
+        "order": {
+            "url": "https://coincheck.com/api/exchange/orders",
+            "path": "https://coincheck.com/api/exchange/orders",
+            "method": "",
+            "sell": "market_sell",
+            "buy": "market_buy"
+        }
+    },
+}
