@@ -11,6 +11,7 @@ class Exchange:
     def __init__(self, name):
         self.logger = logging.getLogger(name)
         self.NAME = name
+        self.nonce = "0"
 
         with open("exchanges/key_config.json", "r") as f:
             key_conf = json.load(f)
@@ -43,11 +44,13 @@ class Exchange:
 
     def generate_headers(self, path, method="", body=""):
         conf = self.api_conf["auth"]
-        
-        timestamp = str(int(time.time()))
+        pre_nonce = self.nonce
+        self.nonce = str(int(time.time()))
+        if self.nonce <= pre_nonce:
+            self.nonce = str(int(pre_nonce) + 1)
         if body:
             body = json.dumps(body)
-        text = timestamp + method + path + body
+        text = self.nonce + method + path + body
         sign = hmac.new(
             bytes(self.api_secret.encode('ascii')),
             bytes(text.encode('ascii')),
@@ -55,7 +58,7 @@ class Exchange:
             ).hexdigest()
         headers = {
             conf["access_key_key"]: self.api_key,
-            conf["access_timestamp_key"]: timestamp,
+            conf["access_timestamp_key"]: self.nonce,
             conf["access_sign_key"]: sign,
             'Content-Type': 'application/json'
         }
@@ -107,6 +110,9 @@ class Exchange:
         result = self.request_api(url, headers=headers, body=body) 
 
         order_id = result["id"]
+        return order_id
+
+    def get_transaction_result(self, order_id):
         transactions = self.get_transactions_from_id(order_id)
         trans_result = self.pick_transactions_info(transactions)
         return trans_result
