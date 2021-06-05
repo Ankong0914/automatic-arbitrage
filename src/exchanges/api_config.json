@@ -26,7 +26,8 @@
             "path": "",
             "method": "",
             "sell": "",
-            "buy": ""
+            "buy": "",
+            "order_id_key": ""
         }
     },
 
@@ -57,7 +58,8 @@
             "path": "/orders/",
             "method": "",
             "sell": "sell",
-            "buy": "buy"
+            "buy": "buy",
+            "order_id_key": "id"
         }
     }, 
     
@@ -88,7 +90,41 @@
             "path": "https://coincheck.com/api/exchange/orders",
             "method": "",
             "sell": "market_sell",
-            "buy": "market_buy"
+            "buy": "market_buy",
+            "order_id_key": "id"
+        }
+    },
+
+    "GMO Coin":{
+        "auth":{
+            "access_key_key": "API-KEY",
+            "access_timestamp_key": "API-TIMESTAMP",
+            "access_sign_key": "API-SIGN"
+        },
+        "ticker":{
+            "url": "https://api.coin.z.com/public/v1/ticker?symbol=BTC",
+            "ask_key": "ask",
+            "bid_key": "bid",
+            "timestamp_key": "timestamp"
+        },
+        "balance": {
+            "url": "https://api.coin.z.com/private/v1/account/assets",
+            "path": "/v1/account/assets",
+            "method": "GET"
+        },
+        "transactions": {
+            "url": "https://api.coin.z.com/private/v1/latestExecutions?symbol=BTC",  
+            "path": "/v1/latestExecutions",
+            "method": "GET"
+        },
+        "order": {
+            "url": "https://api.coin.z.com/private/v1/order",
+            "path": "/v1/order",
+            "method": "POST",
+            "sell": "SELL",
+            "buy": "BUY",
+            "order_id_key": "data"
         }
     }
+
 }

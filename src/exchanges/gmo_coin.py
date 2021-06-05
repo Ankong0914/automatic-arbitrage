@@ -24,84 +24,55 @@ class GmoCoin(Exchange):
         self.api_key = key_conf[self.NAME]["api_key"]
         self.api_secret = key_conf[self.NAME]["api_secret"]
 
-    def update_ticker(self, symbol="BTC"):
-        try:
-            url = f'{self.URL}/public{self.TICKER_EP}?symbol={symbol}'
-            response = requests.get(url)
-            response.raise_for_status()
-            ticker = response.json()["data"][0]
-
-            self.bid = int(ticker["bid"])
-            self.ask = int(ticker["ask"])
-            self.timestamp = ticker["timestamp"]
-            self.logger.info("ticker is updated")
-
-        except requests.exceptions.RequestException as e:
-            self.logger.warning("request error on updating ticker")
-            raise
-
-    def generate_headers(self, method, path, body=None):
-        timestamp = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
-        if body is not None:
-            body = json.dumps(body)
-        else:
-            body = ''
-        text = timestamp + method + path + body
-        sign = hmac.new(
-            bytes(self.api_secret.encode('ascii')),
-            bytes(text.encode('ascii')),
-            hashlib.sha256
-            ).hexdigest()
-        headers = {
-            'API-KEY': self.api_key,
-            'API-TIMESTAMP': timestamp,
-            'API-SIGN': sign
+    def update_ticker(self, ticker):
+        conf = self.api_conf["ticker"]
+        ticker = ticker["data"][0]
+        self.ticker = {
+            "ask": float(ticker[conf["ask_key"]]),
+            "bid": float(ticker[conf["bid_key"]]),
+            "timestamp": ticker[conf["timestamp_key"]]
         }
-        return headers
 
-    def update_balance(self):
-        try:
-            url = f'{self.URL}/private{self.BALANCE_EP}'
-            headers = self.generate_headers("GET", self.BALANCE_EP)
-            response = requests.get(url, headers=headers)
-            response.raise_for_status()
-            balance = response.json()["data"]
-            
-            for currency_data in balance:
-                if currency_data["symbol"] == "JPY":
-                    self.balance_jpy = int(currency_data["amount"])
-                elif currency_data["symbol"] == "BTC":
-                    self.balance_btc = float(currency_data["amount"])
-            self.logger.info("balance is updated")
-
-        except requests.exceptions.RequestException as e:
-            self.logger.error("request error on updating balance")
-            raise
-
-    def send_order(self, side, size):
-        try:
-            url = f'{self.URL}/private{self.ORDER_EP}'
-            body = {
-                "symbol": "BTC",
-                "side": side,
-                "executionType": "MARKET",
-                "size": size
-            }
-            headers = self.generate_headers("POST", self.ORDER_EP, body)
-            response = requests.post(url, headers=headers, data=json.dumps(body))
-            response.raise_for_status()
-            print(json.dumps(response.json(), indent=2))
-        
-        except requests.exceptions.RequestException as e:
-            self.logger.error("request error on posting an order")
-            raise
+    def update_balance(self, balance):
+        for currency_data in balance:
+            if currency_data["symbol"] == "JPY":
+                balance_jpy = int(currency_data["amount"])
+            elif currency_data["symbol"] == "BTC":
+                balance_btc = float(currency_data["amount"])
+        self.balance = {
+            "JPY": balance_jpy,
+            "BTC": balance_btc
+        }
     
-    def send_buy_order(self, size):
-        side = "BUY"
-        size = str(size)
-        self.send_order(side, size)
+    def get_nonce_for_headers(self):
+        nonce = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
+        return nonce
+    
+    def gen_order_body(self, side, size):
+        body = {
+            "symbol": "BTC",
+            "side": side,
+            "executionType": "MARKET",
+            "size": size
+        }
+        return body
 
-    def send_sell_order(self, size):
-        side = "SELL"
-        size = str(size)
-        self.send_order(side, size)
+    def get_transactions_from_id(self, id):
+        url = f"https://api.coin.z.com/private/v1/executions?orderId={id}"
+        method, path = "GET", "/v1/executions"
+        headers = self.generate_headers(path, method=method, body=body)
+        tranasctions = self.request_api(url, headers=headers, body=body)
+        return transactions["data"]["list"]
+    
+    def pick_transactions_info(self, transactions):
+        trans_result = []
+        for transaction  in transactions:
+            trans_info = {
+                "id": transaction["executionId"],
+                "timestamp": transaction["timestamp"],
+                "side": transaction["side"],
+                "size": float(transaction["size"]),
+                "price": float(transaction["price"])
+            }
+            trans_result.append(trans_info)
+        return trans_result
