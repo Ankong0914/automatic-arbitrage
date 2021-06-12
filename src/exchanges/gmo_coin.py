@@ -34,7 +34,7 @@ class GmoCoin(Exchange):
         }
 
     def update_balance(self, balance):
-        for currency_data in balance:
+        for currency_data in balance["data"]:
             if currency_data["symbol"] == "JPY":
                 balance_jpy = int(currency_data["amount"])
             elif currency_data["symbol"] == "BTC":
@@ -60,8 +60,8 @@ class GmoCoin(Exchange):
     def get_transactions_from_id(self, id):
         url = f"https://api.coin.z.com/private/v1/executions?orderId={id}"
         method, path = "GET", "/v1/executions"
-        headers = self.generate_headers(path, method=method, body=body)
-        tranasctions = self.request_api(url, headers=headers, body=body)
+        headers = self.generate_headers(path, method=method)
+        transactions = self.request_api(url, headers=headers)
         return transactions["data"]["list"]
     
     def pick_transactions_info(self, transactions):
