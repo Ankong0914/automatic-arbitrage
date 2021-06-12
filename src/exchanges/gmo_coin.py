@@ -48,13 +48,15 @@ class GmoCoin(Exchange):
         nonce = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
         return nonce
     
-    def gen_order_body(self, side, size):
+    def gen_order_body(self, side, size, order_type, price=None):
         body = {
             "symbol": "BTC",
             "side": side,
-            "executionType": "MARKET",
+            "executionType": order_type,
             "size": size
         }
+        if order_type == "limit":
+            body["price"] = str(price)
         return body
 
     def get_transactions_from_id(self, id):

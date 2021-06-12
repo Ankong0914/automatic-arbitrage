@@ -45,7 +45,7 @@ class Liquid(Exchange):
             "quantity": str(size)
         }
         if order_type == "limit":
-            body["price"] = price
+            body["price"] = str(price)
         return body
 
     def get_transactions_from_id(self, id):

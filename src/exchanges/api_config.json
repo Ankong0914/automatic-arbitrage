@@ -127,6 +127,8 @@
             "method": "POST",
             "sell": "SELL",
             "buy": "BUY",
+            "market": "MARKET",
+            "limit": "LIMIT",
             "order_id_key": "data"
         }
     }
