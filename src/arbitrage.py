@@ -1,5 +1,6 @@
 from exchanges.coin_check import CoinCheck
 from exchanges.liquid import Liquid
+from exchanges.gmo_coin import GmoCoin
 import pandas as pd
 import time
 import datetime
@@ -22,8 +23,8 @@ class Arbitrage():
 
     async def update_tickers(self, exc1, exc2):  # TODO: more generalize
         loop = asyncio.get_event_loop()
-        future1 = loop.run_in_executor(None, exc1.update_ticker)
-        future2 = loop.run_in_executor(None, exc2.update_ticker)
+        future1 = loop.run_in_executor(None, exc1.fetch_ticker)
+        future2 = loop.run_in_executor(None, exc2.fetch_ticker)
         await future1
         await future2
 
@@ -32,37 +33,37 @@ class Arbitrage():
         loop.run_until_complete(func(*args))
 
     def get_relation(self):
-        if self.exc1.ask > self.exc2.ask:
+        if self.exc1.ticker["ask"] > self.exc2.ticker["ask"]:
             self.high_ask_exc, self.low_ask_exc = self.exc1, self.exc2
         else:
             self.high_ask_exc, self.low_ask_exc = self.exc2, self.exc1
 
-        if self.high_ask_exc.bid > self.low_ask_exc.ask:
+        if self.high_ask_exc.ticker["bid"] > self.low_ask_exc.ticker["ask"]:
             relation = "gap"
-        elif self.high_ask_exc.bid >= self.low_ask_exc.bid:
+        elif self.high_ask_exc.ticker["ask"] >= self.low_ask_exc.ticker["bid"]:
             relation = "intersection"
         else:
             relation = "inclusion"
         return relation
     
     def calc_margin(self):
-        selling_price = self.high_ask_exc.bid
+        selling_price = self.high_ask_exc.ticker["bid"]
         selling_charge = selling_price * self.high_ask_exc.TRANS_CHARGE_RATE
-        buying_price = self.low_ask_exc.ask
+        buying_price = self.low_ask_exc.ticker["ask"]
         buying_charge = buying_price * self.low_ask_exc.TRANS_CHARGE_RATE
         margin = selling_price - buying_price - selling_charge - buying_charge
         return margin
 
     def get_margin_type(self, margin):
-        MARGIN_THRES_RATE = [0.0002, 0.0007, 0.0012, 0.0018] # 2100, 4900, 8400, 12600 
+        MARGIN_THRES_RATE = [0.0003, 0.0006, 0.0009, 0.0012] # 2100, 4900, 8400, 12600 
 
-        if margin < MARGIN_THRES_RATE[0] * self.high_ask_exc.ask:
+        if margin < MARGIN_THRES_RATE[0] * self.high_ask_exc.ticker["ask"]:
             margin_type = "little"
-        elif margin < MARGIN_THRES_RATE[1] * self.high_ask_exc.ask:
+        elif margin < MARGIN_THRES_RATE[1] * self.high_ask_exc.ticker["ask"]:
             margin_type = "small"
-        elif margin < MARGIN_THRES_RATE[2] * self.high_ask_exc.ask:
+        elif margin < MARGIN_THRES_RATE[2] * self.high_ask_exc.ticker["ask"]:
             margin_type = "mid"
-        elif margin < MARGIN_THRES_RATE[3] * self.high_ask_exc.ask:
+        elif margin < MARGIN_THRES_RATE[3] * self.high_ask_exc.ticker["ask"]:
             margin_type = "large"
         else:
             margin_type = "huge"
@@ -75,34 +76,45 @@ class Arbitrage():
         target_btc_ratio["large"] = 7/8
         target_btc_ratio["huge"] = 8/8
 
-        total_btc = self.exc1.balance_btc + self.exc2.balance_btc
-        size = total_btc * target_btc_ratio[margin_type] - self.low_ask_exc.balance_btc
+        total_btc = self.exc1.balance["BTC"] + self.exc2.balance["BTC"]
+        size = total_btc * target_btc_ratio[margin_type] - self.low_ask_exc.balance["BTC"]
         if size < self.MIN_TRANS_UNIT:
             size = 0
-        return size
+        return round(size, 8)
     
-    def make_simul_transactions(size):
+    def make_simul_transactions(self, size):
         # order TODO: asyncronize
-        self.high_ask_exc.post_sell_order(size)
-        self.low_ask_exc.post_buy_order(size)
+        sell_order_id = self.high_ask_exc.send_order("sell", size)
+        buy_order_id = self.low_ask_exc.send_order("buy", size)
+        sell_result = self.high_ask_exc.get_transaction_result(sell_order_id)
+        buy_result = self.low_ask_exc.get_transaction_result(buy_order_id)
+        return sell_result, buy_result
     
-    def show_contract_result(self):
-        result = {}
-
-        now = datetime.datetime.now()
-        result["timestamp"] = now.strftime("%Y/%m/%d-%H:%M:%S")
-
-        buy_result = self.low_ask_exc.contract_result
+    def show_contract_result(self, sell_result, buy_result):
+        timestamp = datetime.datetime.now().strftime("%Y/%m/%d-%H:%M:%S")
         buy_exc = self.low_ask_exc.NAME
-        result["buy"] = f"{int(buy_result['price'])} jpy / {buy_result['size']} @ {buy_exc}"
-
-        sell_result = self.high_ask_exc.contract_result
         sell_exc = self.high_ask_exc.NAME
-        result["sell"] = f"{int(sell_result['price'])} jpy / {sell_result['size']} @ {sell_exc}"
+        sell_price, buy_price, sell_size, buy_size = 0, 0, 0, 0
+        for sr in sell_result:
+            sell_price += sr["price"] * sr["size"]
+            sell_size += sr["size"]
+        sell_rate = sell_price / sell_size
+        sell_rate_diff = self.high_ask_exc.ticker["bid"] - sell_rate 
+        for br in buy_result:
+            buy_price += br["price"] * br["size"]
+            buy_size += br["size"]
+        buy_rate = buy_price / buy_size
+        buy_rate_diff = self.low_ask_exc.ticker["ask"] - buy_rate
+        margin = sell_price - buy_price
+        size_diff = round(buy_size - sell_size, 7)
 
-        margin = sell_result["price"] - buy_result["price"]
-        size_diff = size_diff = round(buy_result["size"] - sell_result["size"], 7)
-        result["margin"] = f"{int(margin)} ({size_diff} btc)"
+
+        result = {
+            "timestamp": timestamp,
+            "buy": f"{int(buy_price)} jpy | {buy_size} btc | {int(buy_rate)} jpy/btc ({sell_rate_diff}) @ {buy_exc}",
+            "sell": f"{int(sell_price)} jpy | {sell_size} btc | {int(sell_rate)} jpy/btc ({buy_rate_diff}) @ {sell_exc}",
+            "margin": f"{int(margin)} ({size_diff} btc)"
+        }
 
         # print contract result
         key_width = max([len(key) for key in result.keys()])
@@ -116,129 +128,42 @@ class Arbitrage():
         time.sleep(max(0, self.LOOP_DURATION - (end - start)))
 
     def run(self):
+        print("start run")
+        self.exc1.fetch_balance()
+        self.exc2.fetch_balance()
         while True:
             start = time.time()
 
             # update tickers
             self.send_async_requests(self.update_tickers, (self.exc1, self.exc2))
 
+            tmp = self.exc1.ticker["bid"] - self.exc2.ticker["ask"]
             relation = self.get_relation()  # gap/intersection/inclusion
+            print(relation, tmp)
             if relation != "gap":
                 self.wait_until_next_loop(start)
                 continue
 
             margin = self.calc_margin()
             margin_type = self.get_margin_type(margin)  # little ~ huge
+            print(margin_type, margin)
             if margin_type == "little":
                 self.wait_until_next_loop(start)
                 continue
 
             size = self.get_size(margin_type) 
+            print(size)
             if size == 0:
                 self.wait_until_next_loop(start)
                 continue
 
-            self.make_simul_transactions(size)
+            sell_result, buy_result = self.make_simul_transactions(size)
+            print(margin)
+            self.show_contract_result(sell_result, buy_result)
 
-            # get balance TODO: asyncronize
-            self.exc1.update_balance() # need not do this here
-            self.exc2.update_balance()
-
-            self.show_contract_result()
-
-            self.wait_until_next_loop(start)
     
-
-class ArbitrageSimulator(Arbitrage):
-    def __init__(self, exc1, exc2):
-        super(ArbitrageSimulator, self).__init__(exc1, exc2)
-        self.exc1.balance_jpy = 250000
-        self.exc1.balance_btc = 0.02
-        self.exc2.balance_jpy = 250000
-        self.exc2.balance_btc = 0.02
-        self.chart = {}
-        self.chart[self.exc1.NAME] = pd.read_csv(f"../data/chart_{self.exc1.NAME}.csv")
-        self.chart[self.exc2.NAME] = pd.read_csv(f"../data/chart_{self.exc2.NAME}.csv")
-    
-    def simulated_order(self, size):
-        self.high_ask_exc.balance_jpy += self.high_ask_exc.bid * size
-        self.high_ask_exc.balance_btc -= size
-        self.low_ask_exc.balance_jpy -= self.low_ask_exc.ask * size
-        self.low_ask_exc.balance_btc += size
-
-    def update_tickers_from_charts(self, tickers):
-        self.exc1.ask = tickers[0].ask
-        self.exc1.bid = tickers[0].bid
-        self.exc1.timestamp = tickers[0].timestamp
-
-        self.exc2.ask = tickers[1].ask
-        self.exc2.bid = tickers[1].bid
-        self.exc2.timestamp = tickers[1].timestamp
-    
-    def record_order(self):
-        with open("../data/order_record.csv", "a") as f:
-            w = csv.writer(f, delimiter=",")
-            profit = int(self.exc1.balance_jpy + self.exc2.balance_jpy - 500000)
-            w.writerow([profit, self.exc2.timestamp])
-
-    def simulate(self):
-        charts_iter = zip(self.chart[self.exc1.NAME].itertuples(), self.chart[self.exc2.NAME].itertuples())
-        for ticker1, ticker2 in charts_iter:
-            # update ticker
-            self.update_tickers_from_charts([ticker1, ticker2])
-
-            relation = self.get_relation()  # gap/intersection/inclusion
-            if relation != "gap":
-                continue
-
-            margin = self.calc_margin()
-            margin_type = self.get_margin_type(margin)  # little ~ ultra
-            if margin_type == "little":
-                continue
-
-            size = self.get_size(margin_type)  # 0 ~ 13
-            if size == 0:
-                continue
-            
-            self.simulated_order(size)
-            profit = int(self.exc1.balance_jpy + self.exc2.balance_jpy - 500000)
-            print(profit, margin_type, size, self.exc1.balance_btc, self.exc2.balance_btc)
-        
-    def simulate_realtime(self):
-        while True:
-            start = time.time()
-
-            # update tickers
-            try:
-                self.send_async_requests(self.update_tickers, (self.exc1, self.exc2))
-            except requests.exceptions.RequestException as e:
-                self.wait_until_next_loop(start)
-                continue
-
-            relation = self.get_relation()  # gap/intersection/inclusion
-            if relation != "gap":
-                self.wait_until_next_loop(start)
-                continue
-
-            margin = self.calc_margin()
-            margin_type = self.get_margin_type(margin)  # little ~ huge
-            if margin_type == "little":
-                self.wait_until_next_loop(start)
-                continue
-
-            size = self.get_size(margin_type) 
-            if size == 0:
-                self.wait_until_next_loop(start)
-                continue
-
-            self.simulated_order(size)
-            self.record_order()
-
-            self.wait_until_next_loop(start)
-
-
 if __name__ == "__main__":
-    cc = CoinCheck()
+    gc = GmoCoin()
     liq = Liquid()
-    arbit_sim = ArbitrageSimulator(cc, liq)
-    arbit_sim.simulate_realtime()
+    arbitrage = Arbitrage(gc, liq)
+    arbitrage.run()
