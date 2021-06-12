@@ -97,10 +97,11 @@ class Exchange:
     def pick_order_id(self, order_result):
         pass
     
-    def send_order(self, side_key, size):
+    def send_order(self, side_key, size, order_type_key="market", price=None):
         conf = self.api_conf["order"]
         side = conf[side_key]
-        body = self.gen_order_body(side, size)
+        order_type = conf[order_type_key]
+        body = self.gen_order_body(side, size, order_type, price=price)
         url, method, path = conf["url"], conf["method"], conf["path"]
         headers = self.generate_headers(path, method=method, body=body)
         result = self.request_api(url, headers=headers, body=body) 

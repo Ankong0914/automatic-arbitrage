@@ -27,6 +27,8 @@
             "method": "",
             "sell": "",
             "buy": "",
+            "market": "",
+            "limit": "",
             "order_id_key": ""
         }
     },
@@ -59,6 +61,8 @@
             "method": "",
             "sell": "sell",
             "buy": "buy",
+            "market": "market",
+            "limit": "limit",
             "order_id_key": "id"
         }
     }, 
