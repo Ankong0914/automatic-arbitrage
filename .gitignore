@@ -2,6 +2,9 @@ __pycache__
 .DS_Store
 data
 key_config.json
+src/chart.py
+src/confirm.py
+src/async_test.py
 db/mysql/mysql_data
 db/api_server/migrations
 db/api_server/models
