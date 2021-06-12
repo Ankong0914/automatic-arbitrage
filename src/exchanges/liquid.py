@@ -44,7 +44,7 @@ class Liquid(Exchange):
             "side": side,
             "quantity": str(size)
         }
-        if order_type == "limit":
+        if order_type == self.api_conf["order"]["limit"]:
             body["price"] = str(price)
         return body
 

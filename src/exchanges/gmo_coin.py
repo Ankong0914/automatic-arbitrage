@@ -55,8 +55,8 @@ class GmoCoin(Exchange):
             "executionType": order_type,
             "size": size
         }
-        if order_type == "limit":
-            body["price"] = str(price)
+        if order_type == self.api_conf["order"]["limit"]:
+            body["price"] = str(int(price))
         return body
 
     def get_transactions_from_id(self, id):
