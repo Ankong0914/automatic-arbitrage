@@ -65,6 +65,9 @@ class GmoCoin(Exchange):
         return transactions["data"]["list"]
     
     def pick_transactions_info(self, transactions):
+        if len(transactions) == 0:
+            self.logger.info("this transaction doesn't exist or hasn't constracted yet.")
+        
         trans_result = []
         for transaction  in transactions:
             trans_info = {
