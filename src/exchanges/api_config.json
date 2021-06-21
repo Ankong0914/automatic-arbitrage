@@ -9,6 +9,9 @@
             "url": "",
             "ask_key": "",
             "bid_key": "",
+            "high_key": "",
+            "low_key": "",
+            "volume_key": "",
             "timestamp_key": ""
         },
         "balance": {
@@ -43,6 +46,9 @@
             "url": "https://api.liquid.com/products/5",
             "ask_key": "market_ask",
             "bid_key": "market_bid",
+            "high_key": "high_market_ask",
+            "low_key": "low_market_bid",
+            "volume_key": "volume_24h",
             "timestamp_key": "timestamp"
         },
         "balance": {
@@ -77,6 +83,9 @@
             "url": "https://coincheck.com/api/ticker",
             "ask_key": "ask",
             "bid_key": "bid",
+            "high_key": "high",
+            "low_key": "low",
+            "volume_key": "volume",
             "timestamp_key": "timestamp"
         },
         "balance": {
@@ -109,6 +118,9 @@
             "url": "https://api.coin.z.com/public/v1/ticker?symbol=BTC",
             "ask_key": "ask",
             "bid_key": "bid",
+            "high_key": "high",
+            "low_key": "low",
+            "volume_key": "volume",
             "timestamp_key": "timestamp"
         },
         "balance": {

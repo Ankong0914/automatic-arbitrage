@@ -65,6 +65,9 @@ class Exchange:
         self.ticker = {
             "ask": float(ticker[conf["ask_key"]]),
             "bid": float(ticker[conf["bid_key"]]),
+            "high": float(ticker[conf["high_key"]]),
+            "low": float(ticker[conf["low_key"]]),
+            "volume": float(ticker[conf["volume_key"]]),
             "timestamp": ticker[conf["timestamp_key"]]
         }
     
