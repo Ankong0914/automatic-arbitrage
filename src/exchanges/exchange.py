@@ -1,6 +1,9 @@
 import logging
 import json
 import requests
+from  datetime import datetime
+import pytz
+import re
 import time
 import hmac
 import hashlib
@@ -8,6 +11,8 @@ import hashlib
 logging.basicConfig(level=logging.INFO)
 
 class Exchange:
+    jst = pytz.timezone("Asia/Tokyo")
+
     def __init__(self, name):
         self.logger = logging.getLogger(name)
         self.NAME = name
@@ -59,6 +64,31 @@ class Exchange:
             'Content-Type': 'application/json'
         }
         return headers
+    
+    @staticmethod
+    def is_num(s):
+        try:
+            float(s)
+        except ValueError:
+            return False
+        else:
+            return True
+    
+    def format_timestamp(self, ts):
+        if type(ts) == int or type(ts) == float:
+            dt = datetime.fromtimestamp(ts)
+        elif type(ts) == str:
+            if is_num(ts):
+                dt = datetime.fromtimestamp(float(ts))
+            else:
+                ts = re.sub("Z$", "+00:00", ts)
+                ts = re.sub(r"(\.\d+)", "", ts)
+                dt = datetime.fromisoformat(ts)
+        else:
+            pass  # logging
+        dt_jst = dt.astimezone(Exchange.jst)
+        dt_iso = dt_jst.isoformat(timespec="seconds")
+        return dt_iso
 
     def update_ticker(self, ticker):
         conf = self.api_conf["ticker"]
