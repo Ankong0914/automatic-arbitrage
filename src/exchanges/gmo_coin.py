@@ -30,7 +30,10 @@ class GmoCoin(Exchange):
         self.ticker = {
             "ask": float(ticker[conf["ask_key"]]),
             "bid": float(ticker[conf["bid_key"]]),
-            "timestamp": ticker[conf["timestamp_key"]]
+            "high": float(ticker[conf["high_key"]]),
+            "low": float(ticker[conf["low_key"]]),
+            "volume": float(ticker[conf["volume_key"]]),
+            "timestamp": self.format_timestamp(ticker[conf["timestamp_key"]])
         }
 
     def update_balance(self, balance):

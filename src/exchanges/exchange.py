@@ -78,14 +78,14 @@ class Exchange:
         if type(ts) == int or type(ts) == float:
             dt = datetime.fromtimestamp(ts)
         elif type(ts) == str:
-            if is_num(ts):
+            if self.is_num(ts):
                 dt = datetime.fromtimestamp(float(ts))
             else:
                 ts = re.sub("Z$", "+00:00", ts)
                 ts = re.sub(r"(\.\d+)", "", ts)
                 dt = datetime.fromisoformat(ts)
         else:
-            pass  # logging
+            self.logger.error("input timestamp can't be formatted.")
         dt_jst = dt.astimezone(Exchange.jst)
         dt_iso = dt_jst.isoformat(timespec="seconds")
         return dt_iso
@@ -98,7 +98,7 @@ class Exchange:
             "high": float(ticker[conf["high_key"]]),
             "low": float(ticker[conf["low_key"]]),
             "volume": float(ticker[conf["volume_key"]]),
-            "timestamp": ticker[conf["timestamp_key"]]
+            "timestamp": self.format_timestamp(ticker[conf["timestamp_key"]])
         }
     
     def fetch_ticker(self):
