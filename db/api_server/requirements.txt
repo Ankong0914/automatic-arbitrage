@@ -9,3 +9,4 @@ gunicorn
 flask_marshmallow
 marshmallow-sqlalchemy
 sqlalchemy_utils
+cryptography

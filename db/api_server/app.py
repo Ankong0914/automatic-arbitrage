@@ -3,6 +3,7 @@ from flask_restful import Api
 
 from api_server.database import init_db
 from api_server.apis.transaction import TransactionListAPI, TransactionAPI
+from api_server.apis.ticker import TickerListAPI, TickerAPI
 
 
 def create_app():
@@ -15,6 +16,8 @@ def create_app():
   api = Api(app)
   api.add_resource(TransactionListAPI, '/transaction')
   api.add_resource(TransactionAPI, '/transaction/<id>')
+  api.add_resource(TickerListAPI, '/ticker')
+  api.add_resource(TickerAPI, '/ticker/<id>')
 
   return app
 

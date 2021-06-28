@@ -1,9 +1,7 @@
 from datetime import datetime
 from flask_marshmallow import Marshmallow
 from flask_marshmallow.fields import fields
-from sqlalchemy_utils import UUIDType
 from api_server.database import db
-import uuid
 
 ma = Marshmallow()
 
@@ -11,7 +9,7 @@ ma = Marshmallow()
 class TransactionModel(db.Model):
     __tablename__ = 'transaction'
 
-    id = db.Column(UUIDType(binary=False), primary_key=True, default=uuid.uuid4)
+    id = db.Column(db.Integer, autoincrement=True, primary_key=True)
 
     side = db.Column(db.String(255), nullable=False)
     exchange = db.Column(db.String(255), nullable=False)
