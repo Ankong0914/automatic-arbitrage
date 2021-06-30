@@ -13,12 +13,12 @@ class TransactionModel(db.Model):
 
     side = db.Column(db.String(255), nullable=False)
     exchange = db.Column(db.String(255), nullable=False)
-    balance_jpy = db.Column(db.Integer, nullable=False)
-    balance_btc = db.Column(db.Float, nullable=False)
-    bid = db.Column(db.Float, nullable=False)
-    ask = db.Column(db.Float, nullable=False)
-    size = db.Column(db.Float, nullable=False)
-    price = db.Column(db.Integer, nullable=False)
+    balance_jpy = db.Column(db.REAL, nullable=False)
+    balance_btc = db.Column(db.REAL, nullable=False)
+    bid = db.Column(db.REAL, nullable=False)
+    ask = db.Column(db.REAL, nullable=False)
+    size = db.Column(db.REAL, nullable=False)
+    price = db.Column(db.REAL, nullable=False)
     ordered_at = db.Column(db.DateTime, nullable=False)
     contracted_at = db.Column(db.DateTime, nullable=False)
     

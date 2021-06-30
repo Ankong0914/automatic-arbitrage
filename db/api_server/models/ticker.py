@@ -12,11 +12,11 @@ class TickerModel(db.Model):
     id = db.Column(db.Integer, autoincrement=True, primary_key=True)
 
     exchange = db.Column(db.String(255), nullable=False)
-    ask = db.Column(db.Float, nullable=False)
-    bid = db.Column(db.Float, nullable=False)
-    high = db.Column(db.Float, nullable=False)
-    low = db.Column(db.Float, nullable=False)
-    volume = db.Column(db.Float, nullable=False)
+    ask = db.Column(db.REAL, nullable=False)
+    bid = db.Column(db.REAL, nullable=False)
+    high = db.Column(db.REAL, nullable=False)
+    low = db.Column(db.REAL, nullable=False)
+    volume = db.Column(db.REAL, nullable=False)
     timestamp = db.Column(db.String(255), nullable=False)
 
     def __init__(self, exchange, ask, bid, high, low, volume, timestamp):
