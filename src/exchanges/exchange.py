@@ -1,3 +1,4 @@
+import os
 import logging
 import json
 import requests
@@ -9,6 +10,8 @@ import hmac
 import hashlib
 
 logging.basicConfig(level=logging.INFO)
+
+DB_API_PORT = os.environ["DB_API_PORT"]
 
 class Exchange:
     jst = pytz.timezone("Asia/Tokyo")
@@ -26,7 +29,7 @@ class Exchange:
             api_configs = json.load(f)
         self.api_conf = api_configs[self.NAME]
 
-    def request_api(self, url, headers=None, body=None):
+    def request_api(self, url, headers=None, body=None):  # TODO: rename
         if body is None:  # GET request
             try:
                 response = requests.get(url, headers=headers)
@@ -100,6 +103,14 @@ class Exchange:
             "volume": float(ticker[conf["volume_key"]]),
             "timestamp": self.format_timestamp(ticker[conf["timestamp_key"]])
         }
+    
+    def record_ticker(self):
+        url = f"http://db-api:{DB_API_PORT}/ticker"
+        headers = {"Content-Type": "application/json"}
+        body = self.ticker.copy()
+        body["exchange"] = self.NAME
+        response = self.request_api(url, headers=headers, body=body)
+        return response
     
     def fetch_ticker(self):
         conf = self.api_conf["ticker"]

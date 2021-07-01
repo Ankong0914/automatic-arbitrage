@@ -1,5 +1,6 @@
 __pycache__
 .DS_Store
+.env
 data
 key_config.json
 src/chart.py
