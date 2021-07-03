@@ -104,7 +104,7 @@ class Exchange:
             "timestamp": self.format_timestamp(ticker[conf["timestamp_key"]])
         }
     
-    def record_ticker(self):
+    def insert_ticker_into_db(self):
         url = f"http://db-api:{DB_API_PORT}/ticker"
         headers = {"Content-Type": "application/json"}
         body = self.ticker.copy()
