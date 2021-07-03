@@ -74,3 +74,18 @@ class TickerAPI(Resource):
       db.session.delete(record)
       db.session.commit()
     return None, 204
+
+
+class TickerByExchange(Resource):
+  def __init__(self):
+    self.reqparse = reqparse.RequestParser()
+    self.reqparse.add_argument('begin', type=str)  # TODO: apply above classes
+    self.reqparse.add_argument('end', type=str)
+    super(TickerByExchange, self).__init__()
+  
+  def get(self, exchange):
+    results = TickerModel.query.filter_by(exchange=exchange)
+    if results == None:
+      abort(404)
+    jsonData = TickerSchema(many=True).dump(results)
+    return jsonify({'items': jsonData})
