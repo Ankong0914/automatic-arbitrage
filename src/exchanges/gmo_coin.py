@@ -11,10 +11,6 @@ from exchanges.exchange import Exchange
 class GmoCoin(Exchange):
     def __init__(self):
         super(GmoCoin, self).__init__("GMO Coin")
-        self.URL = "https://api.coin.z.com"
-        self.TICKER_EP = "/v1/ticker"
-        self.BALANCE_EP = "/v1/account/assets"
-        self.ORDER_EP = "/v1/order"
         self.MIN_TRANS_UNIT = 0.0001
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0.0005
@@ -24,17 +20,15 @@ class GmoCoin(Exchange):
         self.api_key = key_conf[self.NAME]["api_key"]
         self.api_secret = key_conf[self.NAME]["api_secret"]
 
-    def update_ticker(self, ticker):
+    def update_ticker(self, ticker_data):
         conf = self.api_conf["ticker"]
-        ticker = ticker["data"][0]
-        self.ticker = {
-            "ask": float(ticker[conf["ask_key"]]),
-            "bid": float(ticker[conf["bid_key"]]),
-            "high": float(ticker[conf["high_key"]]),
-            "low": float(ticker[conf["low_key"]]),
-            "volume": float(ticker[conf["volume_key"]]),
-            "timestamp": self.format_timestamp(ticker[conf["timestamp_key"]])
-        }
+        ticker_data = ticker_data["data"][0]
+        self.ticker.ask = ticker_data[conf["ask_key"]]
+        self.ticker.bid = ticker_data[conf["bid_key"]]
+        self.ticker.high = ticker_data[conf["high_key"]]
+        self.ticker.low = ticker_data[conf["low_key"]]
+        self.ticker.volume = ticker_data[conf["volume_key"]]
+        self.ticker.timestamp = ticker_data[conf["timestamp_key"]]
 
     def update_balance(self, balance):
         for currency_data in balance["data"]:
