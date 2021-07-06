@@ -9,6 +9,9 @@ import time
 import hmac
 import hashlib
 
+from exchanges.ticker import Ticker
+from exchanges.utils import send_http_request
+
 logging.basicConfig(level=logging.INFO)
 
 DB_API_PORT = os.environ["DB_API_PORT"]
@@ -19,6 +22,7 @@ class Exchange:
     def __init__(self, name):
         self.logger = logging.getLogger(name)
         self.NAME = name
+        self.ticker = Ticker()
 
         with open("exchanges/key_config.json", "r") as f:
             key_conf = json.load(f)
@@ -28,26 +32,6 @@ class Exchange:
         with open("exchanges/api_config.json", "r") as f:
             api_configs = json.load(f)
         self.api_conf = api_configs[self.NAME]
-
-    def request_api(self, url, headers=None, body=None):  # TODO: rename
-        if body is None:  # GET request
-            try:
-                response = requests.get(url, headers=headers)
-                response.raise_for_status()
-                return response.json()
-
-            except requests.exceptions.RequestException as e:
-                self.logger.error("request error on updating balance") # TODO
-                raise
-        else:  # POST request
-            try:
-                response = requests.post(url, headers=headers, data=json.dumps(body))
-                response.raise_for_status()
-                return response.json()
-
-            except requests.exceptions.RequestException as e:
-                self.logger.error("request error on updating balance") # TODO
-                raise
 
     def generate_headers(self, path, method="", body=""):
         conf = self.api_conf["auth"]
@@ -67,56 +51,21 @@ class Exchange:
             'Content-Type': 'application/json'
         }
         return headers
-    
-    @staticmethod
-    def is_num(s):
-        try:
-            float(s)
-        except ValueError:
-            return False
-        else:
-            return True
-    
-    def format_timestamp(self, ts):
-        if type(ts) == int or type(ts) == float:
-            dt = datetime.fromtimestamp(ts)
-        elif type(ts) == str:
-            if self.is_num(ts):
-                dt = datetime.fromtimestamp(float(ts))
-            else:
-                ts = re.sub("Z$", "+00:00", ts)
-                ts = re.sub(r"(\.\d+)", "", ts)
-                dt = datetime.fromisoformat(ts)
-        else:
-            self.logger.error("input timestamp can't be formatted.")
-        dt_jst = dt.astimezone(Exchange.jst)
-        dt_iso = dt_jst.isoformat(timespec="seconds")
-        return dt_iso
 
-    def update_ticker(self, ticker):
+    def update_ticker(self, ticker_data):
         conf = self.api_conf["ticker"]
-        self.ticker = {
-            "ask": float(ticker[conf["ask_key"]]),
-            "bid": float(ticker[conf["bid_key"]]),
-            "high": float(ticker[conf["high_key"]]),
-            "low": float(ticker[conf["low_key"]]),
-            "volume": float(ticker[conf["volume_key"]]),
-            "timestamp": self.format_timestamp(ticker[conf["timestamp_key"]])
-        }
-    
-    def insert_ticker_into_db(self):
-        url = f"http://db-api:{DB_API_PORT}/ticker"
-        headers = {"Content-Type": "application/json"}
-        body = self.ticker.copy()
-        body["exchange"] = self.NAME
-        response = self.request_api(url, headers=headers, body=body)
-        return response
+        self.ticker.ask = ticker_data[conf["ask_key"]]
+        self.ticker.bid = ticker_data[conf["bid_key"]]
+        self.ticker.high = ticker_data[conf["high_key"]]
+        self.ticker.low = ticker_data[conf["low_key"]]
+        self.ticker.volume = ticker_data[conf["volume_key"]]
+        self.ticker.timestamp = ticker_data[conf["timestamp_key"]]
     
     def fetch_ticker(self):
         conf = self.api_conf["ticker"]
         url = conf["url"]
-        ticker = self.request_api(url)
-        self.update_ticker(ticker)
+        ticker_data = send_http_request(url)
+        self.update_ticker(ticker_data)
 
     def update_balance(self, balance):
         pass
@@ -125,14 +74,14 @@ class Exchange:
         conf = self.api_conf["balance"]
         url, method, path = conf["url"], conf["method"], conf["path"]
         headers = self.generate_headers(path, method=method)
-        balance = self.request_api(url, headers=headers)
+        balance = send_http_request(url, headers=headers)
         self.update_balance(balance)
     
     def get_transactions(self):
         conf = self.api_conf["transactions"]
         url, method, path = conf["url"], conf["method"], conf["path"]
         headers = self.generate_headers(path, method=method)
-        transactions = self.request_api(url, headers=headers)
+        transactions = send_http_request(url, headers=headers)
         return transactions
 
     def gen_order_body(self, side, size):
@@ -148,7 +97,7 @@ class Exchange:
         body = self.gen_order_body(side, size, order_type, price=price)
         url, method, path = conf["url"], conf["method"], conf["path"]
         headers = self.generate_headers(path, method=method, body=body)
-        result = self.request_api(url, headers=headers, body=body) 
+        result = send_http_request(url, headers=headers, body=body) 
 
         order_id = result[conf["order_id_key"]]
         return order_id
