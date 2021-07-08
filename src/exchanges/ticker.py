@@ -4,7 +4,7 @@ from exchanges.utils import format_timestamp
 from exchanges.utils import send_http_request
 
 
-DB_API_PORT = os.environ["DB_API_PORT"]
+DB_API_PORT = os.environ.get("DB_API_PORT")
 
 class Ticker:
     def __init__(self, exc_name="AnyExchange"):

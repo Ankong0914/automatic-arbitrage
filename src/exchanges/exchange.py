@@ -14,7 +14,7 @@ from exchanges.utils import send_http_request
 
 logging.basicConfig(level=logging.INFO)
 
-DB_API_PORT = os.environ["DB_API_PORT"]
+DB_API_PORT = os.environ.get("DB_API_PORT")
 
 class Exchange:
     jst = pytz.timezone("Asia/Tokyo")
