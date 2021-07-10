@@ -42,10 +42,10 @@ def format_timestamp(ts):
             dt = datetime.fromtimestamp(float(ts))
         else:
             ts = re.sub("Z$", "+00:00", ts)
-            ts = re.sub(r"(\.\d+)", "", ts)
+            # ts = re.sub(r"(\.\d+)", "", ts)
             dt = datetime.fromisoformat(ts)
     else:
         logger.error("input timestamp can't be formatted")
     dt_jst = dt.astimezone(jst)
-    dt_iso = dt_jst.isoformat(timespec="seconds")
+    dt_iso = dt_jst.isoformat(timespec="milliseconds")
     return dt_iso
