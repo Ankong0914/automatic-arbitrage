@@ -1,11 +1,7 @@
 import os
 import logging
 import json
-import requests
-from  datetime import datetime
 import pytz
-import re
-import time
 import hmac
 import hashlib
 
@@ -66,6 +62,7 @@ class Exchange:
         url = conf["url"]
         ticker_data = send_http_request(url)
         self.update_ticker(ticker_data)
+        self.logger.info("ticker is updated")
 
     def update_balance(self, balance):
         pass

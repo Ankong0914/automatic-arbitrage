@@ -4,6 +4,7 @@ import json
 from  datetime import datetime
 import re
 import pytz
+import asyncio
 
 
 logger = logging.getLogger(__name__)
@@ -49,3 +50,16 @@ def format_timestamp(ts):
     dt_jst = dt.astimezone(jst)
     dt_iso = dt_jst.isoformat(timespec="milliseconds")
     return dt_iso
+
+def send_async_requests(funcs, args=None):
+    loop = asyncio.get_event_loop()
+    loops = []
+    if args is None:
+        for func in funcs:
+            loops.append(loop.run_in_executor(None, func))
+    else:
+        for func, arg in zip(funcs, args):
+            loops.append(loop.run_in_executor(None, func, *arg)) 
+    tasks = asyncio.gather(*loops)
+    results = loop.run_until_complete(tasks)
+    return results

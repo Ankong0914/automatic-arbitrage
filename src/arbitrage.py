@@ -1,6 +1,3 @@
-from exchanges.coin_check import CoinCheck
-from exchanges.liquid import Liquid
-from exchanges.gmo_coin import GmoCoin
 import pandas as pd
 import time
 import datetime
@@ -8,6 +5,11 @@ import asyncio
 import logging
 import requests
 import csv
+
+from exchanges.coin_check import CoinCheck
+from exchanges.liquid import Liquid
+from exchanges.gmo_coin import GmoCoin
+from exchanges.utils import send_async_requests
 
 # logging.basicConfig(level=logging.INFO)
 
@@ -20,17 +22,6 @@ class Arbitrage():
         self.low_ask_exc = None
         self.LOOP_DURATION = 1.0 # TODO
         self.MIN_TRANS_UNIT = min([self.exc1.MIN_TRANS_UNIT, self.exc2.MIN_TRANS_UNIT])
-
-    async def update_tickers(self, exc1, exc2):  # TODO: more generalize
-        loop = asyncio.get_event_loop()
-        future1 = loop.run_in_executor(None, exc1.fetch_ticker)
-        future2 = loop.run_in_executor(None, exc2.fetch_ticker)
-        await future1
-        await future2
-
-    def send_async_requests(self, func, args):
-        loop = asyncio.get_event_loop()
-        loop.run_until_complete(func(*args))
 
     def get_relation(self):
         if self.exc1.ticker["ask"] > self.exc2.ticker["ask"]:
@@ -82,12 +73,24 @@ class Arbitrage():
             size = 0
         return round(size, 8)
     
+    def fetch_simul_tickers(self):
+        funcs = (self.exc1.fetch_ticker, self.exc2.fetch_ticker)
+        send_async_requests(funcs)
+    
+    def fetch_simul_balances(self):
+        funcs = (self.exc1.fetch_balance, self.exc2.fetch_balance)
+        send_async_requests(funcs)
+    
     def make_simul_transactions(self, size):
-        # order TODO: asyncronize
-        sell_order_id = self.high_ask_exc.send_order("sell", size)
-        buy_order_id = self.low_ask_exc.send_order("buy", size)
-        sell_result = self.high_ask_exc.get_transaction_result(sell_order_id)
-        buy_result = self.low_ask_exc.get_transaction_result(buy_order_id)
+        # send orders
+        funcs = (self.high_ask_exc.send_order, self.low_ask_exc.send_order)
+        args = (("sell", size), ("buy", size))
+        sell_order_id, buy_order_id = send_async_requests(funcs, args)
+
+        # get transactions
+        funcs = (self.high_ask_exc.get_transaction_result, self.low_ask_exc.get_transaction_result)
+        args = ((sell_order_id,), (buy_order_id,))
+        sell_result, buy_result = send_async_requests(funcs, args)
         return sell_result, buy_result
     
     def show_contract_result(self, sell_result, buy_result):
@@ -129,13 +132,13 @@ class Arbitrage():
 
     def run(self):
         print("start run")
-        self.exc1.fetch_balance()
-        self.exc2.fetch_balance()
+        self.fetch_simul_balances()
+        
         while True:
             start = time.time()
 
-            # update tickers
-            self.send_async_requests(self.update_tickers, (self.exc1, self.exc2))
+            # fetch tickers
+            self.fetch_simul_tickers()
 
             tmp = self.exc1.ticker["bid"] - self.exc2.ticker["ask"]
             relation = self.get_relation()  # gap/intersection/inclusion
