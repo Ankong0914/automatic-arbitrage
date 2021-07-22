@@ -1,7 +1,10 @@
 from datetime import datetime
 import jwt
+import logging
 
 from exchanges.exchange import Exchange
+from exchanges.base_ticker import BaseTicker
+
 
 class Liquid(Exchange):
     def __init__(self):
@@ -9,6 +12,8 @@ class Liquid(Exchange):
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0
+
+        self.ticker = self.Ticker(self.api_conf["ticker"], self.NAME)
 
     def generate_headers(self, path, method="", body=""):
         timestamp = datetime.now().timestamp()
@@ -39,12 +44,12 @@ class Liquid(Exchange):
     
     def gen_order_body(self, side, size, order_type, price=None):
         body = {
-            "order_type": order_type,
+            "order_type": self.api_conf["order"][order_type],
             "product_id": 5,
             "side": side,
             "quantity": str(size)
         }
-        if order_type == self.api_conf["order"]["limit"]:
+        if order_type == "limit":
             body["price"] = str(price)
         return body
 
@@ -68,3 +73,8 @@ class Liquid(Exchange):
             }
             trans_result.append(trans_info)
         return trans_result
+
+    class Ticker(BaseTicker):
+        def __init__(self, conf, name):
+            super(Liquid.Ticker, self).__init__(conf, name)
+            self.logger = logging.getLogger(name)

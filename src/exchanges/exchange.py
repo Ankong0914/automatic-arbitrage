@@ -1,11 +1,9 @@
 import os
 import logging
 import json
-import pytz
 import hmac
 import hashlib
 
-from exchanges.ticker import Ticker
 from exchanges.utils import send_http_request
 
 logging.basicConfig(level=logging.INFO)
@@ -13,21 +11,18 @@ logging.basicConfig(level=logging.INFO)
 DB_API_PORT = os.environ.get("DB_API_PORT")
 
 class Exchange:
-    jst = pytz.timezone("Asia/Tokyo")
-
     def __init__(self, name):
-        self.logger = logging.getLogger(name)
-        self.NAME = name
-        self.ticker = Ticker()
-
         with open("exchanges/key_config.json", "r") as f:
             key_conf = json.load(f)
-        self.api_key = key_conf[self.NAME]["api_key"]
-        self.api_secret = key_conf[self.NAME]["api_secret"]
+        self.api_key = key_conf[name]["api_key"]
+        self.api_secret = key_conf[name]["api_secret"]
 
         with open("exchanges/api_config.json", "r") as f:
             api_configs = json.load(f)
-        self.api_conf = api_configs[self.NAME]
+        self.api_conf = api_configs[name]
+
+        self.logger = logging.getLogger(name)
+        self.NAME = name
 
     def generate_headers(self, path, method="", body=""):
         conf = self.api_conf["auth"]
@@ -47,22 +42,6 @@ class Exchange:
             'Content-Type': 'application/json'
         }
         return headers
-
-    def update_ticker(self, ticker_data):
-        conf = self.api_conf["ticker"]
-        self.ticker.ask = ticker_data[conf["ask_key"]]
-        self.ticker.bid = ticker_data[conf["bid_key"]]
-        self.ticker.high = ticker_data[conf["high_key"]]
-        self.ticker.low = ticker_data[conf["low_key"]]
-        self.ticker.volume = ticker_data[conf["volume_key"]]
-        self.ticker.timestamp = ticker_data[conf["timestamp_key"]]
-    
-    def fetch_ticker(self):
-        conf = self.api_conf["ticker"]
-        url = conf["url"]
-        ticker_data = send_http_request(url)
-        self.update_ticker(ticker_data)
-        self.logger.info("ticker is updated")
 
     def update_balance(self, balance):
         pass

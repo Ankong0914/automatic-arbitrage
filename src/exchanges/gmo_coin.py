@@ -1,34 +1,19 @@
 import time
 from datetime import datetime
-import requests
-import json
-import hmac
-import hashlib
+import logging
 
 from exchanges.exchange import Exchange
+from exchanges.base_ticker import BaseTicker
 
 
 class GmoCoin(Exchange):
     def __init__(self):
-        super(GmoCoin, self).__init__("GMO Coin")
+        super(GmoCoin, self).__init__("GMOCoin")
         self.MIN_TRANS_UNIT = 0.0001
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0.0005
 
-        with open("exchanges/key_config.json", "r") as f:
-            key_conf = json.load(f)
-        self.api_key = key_conf[self.NAME]["api_key"]
-        self.api_secret = key_conf[self.NAME]["api_secret"]
-
-    def update_ticker(self, ticker_data):
-        conf = self.api_conf["ticker"]
-        ticker_data = ticker_data["data"][0]
-        self.ticker.ask = ticker_data[conf["ask_key"]]
-        self.ticker.bid = ticker_data[conf["bid_key"]]
-        self.ticker.high = ticker_data[conf["high_key"]]
-        self.ticker.low = ticker_data[conf["low_key"]]
-        self.ticker.volume = ticker_data[conf["volume_key"]]
-        self.ticker.timestamp = ticker_data[conf["timestamp_key"]]
+        self.ticker = self.Ticker(self.api_conf["ticker"], self.NAME)
 
     def update_balance(self, balance):
         for currency_data in balance["data"]:
@@ -45,14 +30,14 @@ class GmoCoin(Exchange):
         nonce = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
         return nonce
     
-    def gen_order_body(self, side, size, order_type, price=None):
+    def gen_order_body(self, side, size, order_type_key, price=None):
         body = {
             "symbol": "BTC",
             "side": side,
-            "executionType": order_type,
+            "executionType": self.api_conf["order"][order_type_key],
             "size": size
         }
-        if order_type == self.api_conf["order"]["limit"]:
+        if order_type_key == "limit":
             body["price"] = str(int(price))
         return body
 
@@ -78,3 +63,17 @@ class GmoCoin(Exchange):
             }
             trans_result.append(trans_info)
         return trans_result
+
+    class Ticker(BaseTicker):
+        def __init__(self, conf, name):
+            super(GmoCoin.Ticker, self).__init__(conf, name)
+            self.logger = logging.getLogger(name)
+        
+        def parse(self, ticker_data):
+            ticker_data = ticker_data["data"][0]
+            self.ask = ticker_data[self.conf["ask_key"]]
+            self.bid = ticker_data[self.conf["bid_key"]]
+            self.high = ticker_data[self.conf["high_key"]]
+            self.low = ticker_data[self.conf["low_key"]]
+            self.volume = ticker_data[self.conf["volume_key"]]
+            self.timestamp = ticker_data[self.conf["timestamp_key"]]

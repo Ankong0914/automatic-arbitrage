@@ -108,7 +108,7 @@
         }
     },
 
-    "GMO Coin":{
+    "GMOCoin":{
         "auth":{
             "access_key_key": "API-KEY",
             "access_timestamp_key": "API-TIMESTAMP",
@@ -142,6 +142,43 @@
             "market": "MARKET",
             "limit": "LIMIT",
             "order_id_key": "data"
+        }
+    },
+
+    "bitFlyer":{
+        "auth":{
+            "access_key_key": "ACCESS-KEY",
+            "access_timestamp_key": "ACCESS-TIMESTAMP",
+            "access_sign_key": "ACCESS-SIGN"
+        },
+        "ticker":{
+            "url": "https://api.bitflyer.com/v1/ticker",
+            "ask_key": "best_ask",
+            "bid_key": "best_bid",
+            "high_key": "",
+            "low_key": "",
+            "volume_key": "volume",
+            "timestamp_key": "timestamp"
+        },
+        "balance": {
+            "url": "https://api.bitflyer.com/v1/me/getbalance",
+            "path": "/v1/me/getbalance",
+            "method": "GET"
+        },
+        "transactions": {
+            "url": "https://api.bitflyer.com/v1/me/getchildorders",
+            "path": "/v1/me/getchildorders",
+            "method": "GET"
+        },
+        "order": {
+            "url": "https://api.bitflyer.com/v1/me/sendchildorder",
+            "path": "/v1/me/sendchildorder",
+            "method": "POST",
+            "sell": "SELL",
+            "buy": "BUY",
+            "market": "MARKET",
+            "limit": "LIMIT",
+            "order_id_key": "child_order_acceptance_id"
         }
     }
 
