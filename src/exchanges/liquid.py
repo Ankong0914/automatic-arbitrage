@@ -42,14 +42,14 @@ class Liquid(Exchange):
             "BTC": balance_btc
         }
     
-    def gen_order_body(self, side, size, order_type, price=None):
+    def gen_order_body(self, side, size, order_type_key, price=None):
         body = {
-            "order_type": self.api_conf["order"][order_type],
+            "order_type": self.api_conf["order"][order_type_key],
             "product_id": 5,
             "side": side,
             "quantity": str(size)
         }
-        if order_type == "limit":
+        if order_type_key == "limit":
             body["price"] = str(price)
         return body
 
