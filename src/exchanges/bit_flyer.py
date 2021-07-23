@@ -1,5 +1,4 @@
 import time
-import logging
 
 from exchanges.exchange import Exchange
 from exchanges.base_ticker import BaseTicker
@@ -13,7 +12,7 @@ class BitFlyer(Exchange):
         # TODO: this value is changed depends on the amount of transaction for recent month
         self.TRANS_CHARGE_RATE = 0.0015
 
-        self.ticker = self.Ticker(self.api_conf["ticker"], self.NAME)
+        self.ticker = self.create_ticker()
 
     def get_nonce_for_headers(self):
         nonce = str(time.time())
@@ -28,9 +27,8 @@ class BitFlyer(Exchange):
         self.logger.info("balance is updated")
 
     class Ticker(BaseTicker):
-        def __init__(self, conf, name):
-            super(BitFlyer.Ticker, self).__init__(conf, name)
-            self.logger = logging.getLogger(name)
+        def __init__(self, bitflyer):
+            super(BitFlyer.Ticker, self).__init__(bitflyer)
         
         def parse(self, ticker_data):
             self.ask = ticker_data[self.conf["ask_key"]]

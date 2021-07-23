@@ -1,5 +1,4 @@
 import time
-import logging
 
 from exchanges.exchange import Exchange
 from exchanges.base_ticker import BaseTicker
@@ -12,7 +11,7 @@ class CoinCheck(Exchange):
         self.REMITTANCE_CHARGE_RATE = 0.001
         self.TRANS_CHARGE_RATE = 0
         
-        self.ticker = self.Ticker(self.api_conf["ticker"], self.NAME)
+        self.ticker = self.create_ticker()
         self.nonce = "0"
 
     def update_balance(self, balance):
@@ -69,7 +68,6 @@ class CoinCheck(Exchange):
         return trans_result
     
     class Ticker(BaseTicker):
-        def __init__(self, conf, name):
-            super(CoinCheck.Ticker, self).__init__(conf, name)
-            self.logger = logging.getLogger(name)
+        def __init__(self, coincheck):
+            super(CoinCheck.Ticker, self).__init__(coincheck)
         

@@ -1,6 +1,5 @@
 import time
 from datetime import datetime
-import logging
 
 from exchanges.exchange import Exchange
 from exchanges.base_ticker import BaseTicker
@@ -13,8 +12,8 @@ class GmoCoin(Exchange):
         self.REMITTANCE_CHARGE_RATE = 0
         self.TRANS_CHARGE_RATE = 0.0005
 
-        self.ticker = self.Ticker(self.api_conf["ticker"], self.NAME)
-
+        self.ticker = self.create_ticker()
+        
     def update_balance(self, balance):
         for currency_data in balance["data"]:
             if currency_data["symbol"] == "JPY":
@@ -65,9 +64,8 @@ class GmoCoin(Exchange):
         return trans_result
 
     class Ticker(BaseTicker):
-        def __init__(self, conf, name):
-            super(GmoCoin.Ticker, self).__init__(conf, name)
-            self.logger = logging.getLogger(name)
+        def __init__(self, gmocoin):
+            super(GmoCoin.Ticker, self).__init__(gmocoin)
         
         def parse(self, ticker_data):
             ticker_data = ticker_data["data"][0]

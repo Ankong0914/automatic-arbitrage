@@ -24,6 +24,9 @@ class Exchange:
         self.logger = logging.getLogger(name)
         self.NAME = name
 
+    def create_ticker(self):
+        return self.Ticker(self)
+
     def generate_headers(self, path, method="", body=""):
         conf = self.api_conf["auth"]
         nonce = self.get_nonce_for_headers()

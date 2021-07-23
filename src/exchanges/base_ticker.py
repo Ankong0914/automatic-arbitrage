@@ -1,4 +1,5 @@
 import os
+import logging
 
 from exchanges.utils import format_timestamp
 from exchanges.utils import send_http_request
@@ -7,9 +8,10 @@ from exchanges.utils import send_http_request
 DB_API_PORT = os.environ.get("DB_API_PORT")
 
 class BaseTicker:
-    def __init__(self, conf, exc_name):
-        self.conf = conf
-        self.exchange = exc_name
+    def __init__(self, exchange):
+        self.logger = logging.getLogger(exchange.NAME)
+        self.conf = exchange.api_conf["ticker"]
+        self.exc_name = exchange.NAME
         self._ask = 0.0
         self._bid = 0.0
         self._high = 0.0
@@ -73,7 +75,7 @@ class BaseTicker:
     @property
     def dict(self):
         self._dict = {
-            "exchange": self.exchange,
+            "exchange": self.exc_name,
             "ask": self.ask,
             "bid": self.bid,
             "high": self.high,
