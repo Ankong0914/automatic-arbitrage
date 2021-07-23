@@ -2,6 +2,7 @@ import time
 
 from exchanges.exchange import Exchange
 from exchanges.base_ticker import BaseTicker
+from exchanges.base_order import BaseOrder
 
 
 class CoinCheck(Exchange):
@@ -27,25 +28,6 @@ class CoinCheck(Exchange):
             self.nonce = str(int(pre_nonce) + 1)
         return self.nonce
     
-    def gen_order_body(self, side, size):
-        if side == "market_buy":
-            self.fetch_ticker()
-            size_jpy = size * self.ticker["ask"]
-            body = {
-                "pair": "btc_jpy",
-                "order_type": side,
-                "market_buy_amount": size_jpy
-            }
-        elif side == "market_sell":
-            body = {
-                "pair": "btc_jpy",
-                "order_type": side,
-                "amount": size,
-            }
-        else:
-            self.logger.error("unexpected side is set")
-        return body
-    
     def get_transactions_from_id(self, id):
         all_transactions = self.get_transactions()["transactions"]
         transactions = [transaction for transaction in all_transactions if transaction["order_id"] == id]
@@ -67,7 +49,31 @@ class CoinCheck(Exchange):
             trans_result.append(trans_info)
         return trans_result
     
+
     class Ticker(BaseTicker):
         def __init__(self, coincheck):
             super(CoinCheck.Ticker, self).__init__(coincheck)
+    
+
+    class Order(BaseOrder):
+        def __init__(self, coincheck, order_type_key, side_key, price=None):
+            super(CoinCheck.Order, self).__init__(coincheck, order_type_key, side_key, price)
         
+        def generate_body(self):
+            if self.side == "market_buy":
+                self.fetch_ticker()
+                size_jpy = self.size * self.ticker["ask"]
+                body = {
+                    "pair": "btc_jpy",
+                    "order_type": self.side,
+                    "market_buy_amount": size_jpy
+                }
+            elif self.side == "market_sell":
+                body = {
+                    "pair": "btc_jpy",
+                    "order_type": self.side,
+                    "amount": self.size,
+                }
+            else:
+                self.logger.error("unexpected side is set")
+            return body

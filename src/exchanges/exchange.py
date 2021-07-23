@@ -26,6 +26,9 @@ class Exchange:
 
     def create_ticker(self):
         return self.Ticker(self)
+    
+    def create_order(self, order_type_key, side_key, price=None):
+        return self.Order(self, order_type_key, side_key, price)
 
     def generate_headers(self, path, method="", body=""):
         conf = self.api_conf["auth"]
@@ -68,18 +71,6 @@ class Exchange:
 
     def pick_order_id(self, order_result):
         pass
-    
-    def send_order(self, side_key, size, order_type_key="market", price=None):
-        conf = self.api_conf["order"]
-        side = conf[side_key]
-        order_type = conf[order_type_key]
-        body = self.gen_order_body(side, size, order_type, price=price)
-        url, method, path = conf["url"], conf["method"], conf["path"]
-        headers = self.generate_headers(path, method=method, body=body)
-        result = send_http_request(url, headers=headers, body=body) 
-
-        order_id = result[conf["order_id_key"]]
-        return order_id
 
     def get_transaction_result(self, order_id):
         transactions = self.get_transactions_from_id(order_id)

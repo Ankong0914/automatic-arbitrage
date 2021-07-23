@@ -3,6 +3,7 @@ import jwt
 
 from exchanges.exchange import Exchange
 from exchanges.base_ticker import BaseTicker
+from exchanges.base_order import BaseOrder
 
 
 class Liquid(Exchange):
@@ -40,17 +41,6 @@ class Liquid(Exchange):
             "JPY": balance_jpy,
             "BTC": balance_btc
         }
-    
-    def gen_order_body(self, side, size, order_type_key, price=None):
-        body = {
-            "order_type": self.api_conf["order"][order_type_key],
-            "product_id": 5,
-            "side": side,
-            "quantity": str(size)
-        }
-        if order_type_key == "limit":
-            body["price"] = str(price)
-        return body
 
     def get_transactions_from_id(self, id):
         all_transactions = self.get_transactions()["models"]
@@ -73,7 +63,24 @@ class Liquid(Exchange):
             trans_result.append(trans_info)
         return trans_result
 
+
     class Ticker(BaseTicker):
         def __init__(self, liquid):
             super(Liquid.Ticker, self).__init__(liquid)
+    
+    
+    class Order(BaseOrder):
+        def __init__(self, liquid, order_type_key, side_key, price=None):
+            super(Liquid.Order, self).__init__(liquid, order_type_key, side_key, price)
+        
+        def generate_body(self):
+            body = {
+                "order_type": self.order_type,
+                "product_id": 5,
+                "side": self.side,
+                "quantity": str(self.size)
+            }
+            if self.order_type_key == "limit":
+                body["price"] = str(self.price)
+            return body
             

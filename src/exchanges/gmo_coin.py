@@ -3,6 +3,7 @@ from datetime import datetime
 
 from exchanges.exchange import Exchange
 from exchanges.base_ticker import BaseTicker
+from exchanges.base_order import BaseOrder
 
 
 class GmoCoin(Exchange):
@@ -13,7 +14,7 @@ class GmoCoin(Exchange):
         self.TRANS_CHARGE_RATE = 0.0005
 
         self.ticker = self.create_ticker()
-        
+
     def update_balance(self, balance):
         for currency_data in balance["data"]:
             if currency_data["symbol"] == "JPY":
@@ -28,17 +29,6 @@ class GmoCoin(Exchange):
     def get_nonce_for_headers(self):
         nonce = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
         return nonce
-    
-    def gen_order_body(self, side, size, order_type_key, price=None):
-        body = {
-            "symbol": "BTC",
-            "side": side,
-            "executionType": self.api_conf["order"][order_type_key],
-            "size": size
-        }
-        if order_type_key == "limit":
-            body["price"] = str(int(price))
-        return body
 
     def get_transactions_from_id(self, id):
         url = f"https://api.coin.z.com/private/v1/executions?orderId={id}"
@@ -63,6 +53,7 @@ class GmoCoin(Exchange):
             trans_result.append(trans_info)
         return trans_result
 
+
     class Ticker(BaseTicker):
         def __init__(self, gmocoin):
             super(GmoCoin.Ticker, self).__init__(gmocoin)
@@ -75,3 +66,19 @@ class GmoCoin(Exchange):
             self.low = ticker_data[self.conf["low_key"]]
             self.volume = ticker_data[self.conf["volume_key"]]
             self.timestamp = ticker_data[self.conf["timestamp_key"]]
+    
+            
+    class Order(BaseOrder):
+        def __init__(self, gmocoin, order_type_key, side_key, price=None):
+            super(GmoCoin.Order, self).__init__(gmocoin, order_type_key, side_key, price)
+        
+        def gen_order_body(self):
+            body = {
+                "symbol": "BTC",
+                "side": self.side,
+                "executionType": self.order_type,
+                "size": self.size
+            }
+            if self.order_type_key == "limit":
+                body["price"] = str(int(self.price))
+            return body

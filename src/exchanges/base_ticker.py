@@ -10,6 +10,7 @@ DB_API_PORT = os.environ.get("DB_API_PORT")
 class BaseTicker:
     def __init__(self, exchange):
         self.logger = logging.getLogger(exchange.NAME)
+        self.exchange = exchange
         self.conf = exchange.api_conf["ticker"]
         self.exc_name = exchange.NAME
         self._ask = 0.0

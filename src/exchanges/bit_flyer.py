@@ -2,6 +2,7 @@ import time
 
 from exchanges.exchange import Exchange
 from exchanges.base_ticker import BaseTicker
+from exchanges.base_order import BaseOrder
 
 
 class BitFlyer(Exchange):
@@ -26,6 +27,7 @@ class BitFlyer(Exchange):
                 self.balance_btc = currency_data["amount"]
         self.logger.info("balance is updated")
 
+
     class Ticker(BaseTicker):
         def __init__(self, bitflyer):
             super(BitFlyer.Ticker, self).__init__(bitflyer)
@@ -35,3 +37,7 @@ class BitFlyer(Exchange):
             self.bid = ticker_data[self.conf["bid_key"]]
             self.volume = ticker_data[self.conf["volume_key"]]
             self.timestamp = ticker_data[self.conf["timestamp_key"]]
+    
+    class Order(BaseOrder):
+        def __init__(self, bitflyer, order_type_key, side_key, price=None):
+            super(BitFlyer.Order, self).__init__(bitflyer, order_type_key, side_key, price)
