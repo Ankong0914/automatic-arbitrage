@@ -2,8 +2,9 @@ import time
 from datetime import datetime
 
 from exchanges.exchange import Exchange
-from exchanges.base_ticker import BaseTicker
-from exchanges.base_order import BaseOrder
+from exchanges.ticker import BaseTicker
+from exchanges.account import BaseAccount
+from exchanges.order import BaseOrder
 
 
 class GmoCoin(Exchange):
@@ -14,17 +15,7 @@ class GmoCoin(Exchange):
         self.TRANS_CHARGE_RATE = 0.0005
 
         self.ticker = self.create_ticker()
-
-    def update_balance(self, balance):
-        for currency_data in balance["data"]:
-            if currency_data["symbol"] == "JPY":
-                balance_jpy = int(currency_data["amount"])
-            elif currency_data["symbol"] == "BTC":
-                balance_btc = float(currency_data["amount"])
-        self.balance = {
-            "JPY": balance_jpy,
-            "BTC": balance_btc
-        }
+        self.account = self.create_account()
     
     def get_nonce_for_headers(self):
         nonce = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
@@ -67,6 +58,23 @@ class GmoCoin(Exchange):
             self.volume = ticker_data[self.conf["volume_key"]]
             self.timestamp = ticker_data[self.conf["timestamp_key"]]
     
+
+    class Account(BaseAccount):
+        def __init__(self, gmocoin):
+            super(GmoCoin.Account, self).__init__(gmocoin)
+
+        def parse_balance(self, balance):
+            for currency_data in balance["data"]:
+                if currency_data["symbol"] == "JPY":
+                    balance_jpy = currency_data["amount"]
+                elif currency_data["symbol"] == "BTC":
+                    balance_btc = currency_data["amount"]
+            self.balance = {
+                "JPY": balance_jpy,
+                "BTC": balance_btc
+            }
+            self.logger.info("balance is updated")
+
             
     class Order(BaseOrder):
         def __init__(self, gmocoin, order_type_key, side_key, price=None):

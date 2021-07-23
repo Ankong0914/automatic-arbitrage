@@ -2,8 +2,9 @@ from datetime import datetime
 import jwt
 
 from exchanges.exchange import Exchange
-from exchanges.base_ticker import BaseTicker
-from exchanges.base_order import BaseOrder
+from exchanges.ticker import BaseTicker
+from exchanges.account import BaseAccount
+from exchanges.order import BaseOrder
 
 
 class Liquid(Exchange):
@@ -14,6 +15,7 @@ class Liquid(Exchange):
         self.TRANS_CHARGE_RATE = 0
 
         self.ticker = self.create_ticker()
+        self.account = self.create_account()
 
     def generate_headers(self, path, method="", body=""):
         timestamp = datetime.now().timestamp()
@@ -30,17 +32,6 @@ class Liquid(Exchange):
             'Content-Type' : 'application/json'
         }
         return headers
-
-    def update_balance(self, balance):
-        for currency_data in balance:
-            if currency_data["currency"] == "JPY":
-                balance_jpy = float(currency_data["balance"])
-            elif currency_data["currency"] == "BTC":
-                balance_btc = float(currency_data["balance"])
-        self.balance = {
-            "JPY": balance_jpy,
-            "BTC": balance_btc
-        }
 
     def get_transactions_from_id(self, id):
         all_transactions = self.get_transactions()["models"]
@@ -68,7 +59,24 @@ class Liquid(Exchange):
         def __init__(self, liquid):
             super(Liquid.Ticker, self).__init__(liquid)
     
-    
+
+    class Account(BaseAccount):
+        def __init__(self, liquid):
+            super(Liquid.Account, self).__init__(liquid)
+
+        def parse_balance(self, balance):
+            for currency_data in balance:
+                if currency_data["currency"] == "JPY":
+                    balance_jpy = float(currency_data["balance"])
+                elif currency_data["currency"] == "BTC":
+                    balance_btc = float(currency_data["balance"])
+            self.balance = {
+                "JPY": balance_jpy,
+                "BTC": balance_btc
+            }
+            self.logger.info("balance is updated")
+
+
     class Order(BaseOrder):
         def __init__(self, liquid, order_type_key, side_key, price=None):
             super(Liquid.Order, self).__init__(liquid, order_type_key, side_key, price)

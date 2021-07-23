@@ -1,8 +1,9 @@
 import time
 
 from exchanges.exchange import Exchange
-from exchanges.base_ticker import BaseTicker
-from exchanges.base_order import BaseOrder
+from exchanges.ticker import BaseTicker
+from exchanges.account import BaseAccount
+from exchanges.order import BaseOrder
 
 
 class CoinCheck(Exchange):
@@ -13,13 +14,8 @@ class CoinCheck(Exchange):
         self.TRANS_CHARGE_RATE = 0
         
         self.ticker = self.create_ticker()
+        self.account = self.create_account()
         self.nonce = "0"
-
-    def update_balance(self, balance):
-        self.balance = {
-            "JPY": float(balance["jpy"]),
-            "BTC": float(balance["btc"])
-        }
 
     def get_nonce_for_headers(self):
         pre_nonce = self.nonce
@@ -54,6 +50,18 @@ class CoinCheck(Exchange):
         def __init__(self, coincheck):
             super(CoinCheck.Ticker, self).__init__(coincheck)
     
+
+    class Account(BaseAccount):
+        def __init__(self, coincheck):
+            super(CoinCheck.Account, self).__init__(coincheck)
+
+        def parse_balance(self, balance):
+            self.balance = {
+                "JPY": float(balance["jpy"]),
+                "BTC": float(balance["btc"])
+            }
+            self.logger.info("balance is updated")
+        
 
     class Order(BaseOrder):
         def __init__(self, coincheck, order_type_key, side_key, price=None):
