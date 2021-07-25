@@ -51,5 +51,5 @@ class BitFlyer(Exchange):
 
     
     class Order(BaseOrder):
-        def __init__(self, bitflyer, order_type_key, side_key, price=None):
-            super(BitFlyer.Order, self).__init__(bitflyer, order_type_key, side_key, price)
+        def __init__(self, bitflyer, order_type_key, side_key, size, price=None):
+            super(BitFlyer.Order, self).__init__(bitflyer, order_type_key, side_key, size, price)

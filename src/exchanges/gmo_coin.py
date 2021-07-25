@@ -77,8 +77,8 @@ class GmoCoin(Exchange):
 
             
     class Order(BaseOrder):
-        def __init__(self, gmocoin, order_type_key, side_key, price=None):
-            super(GmoCoin.Order, self).__init__(gmocoin, order_type_key, side_key, price)
+        def __init__(self, gmocoin, order_type_key, side_key, size, price=None):
+            super(GmoCoin.Order, self).__init__(gmocoin, order_type_key, side_key, size, price)
         
         def gen_order_body(self):
             body = {

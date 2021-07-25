@@ -78,8 +78,8 @@ class Liquid(Exchange):
 
 
     class Order(BaseOrder):
-        def __init__(self, liquid, order_type_key, side_key, price=None):
-            super(Liquid.Order, self).__init__(liquid, order_type_key, side_key, price)
+        def __init__(self, liquid, order_type_key, side_key, size, price=None):
+            super(Liquid.Order, self).__init__(liquid, order_type_key, side_key, size, price)
         
         def generate_body(self):
             body = {

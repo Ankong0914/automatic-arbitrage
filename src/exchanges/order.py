@@ -2,7 +2,7 @@ from exchanges.utils import send_http_request
 
 
 class BaseOrder:
-    def __init__(self, exchange, order_type_key, side_key, price=None):
+    def __init__(self, exchange, order_type_key, side_key, size, price=None):
         self.exchange = exchange
         self.conf = exchange.api_conf["order"]
         self.exc_name = exchange.NAME
@@ -10,6 +10,7 @@ class BaseOrder:
         self.order_type = self.conf[order_type_key]
         self.side_key = side_key
         self.side = self.conf[side_key]
+        self.size = size
         self.price = price
     
     def send(self):

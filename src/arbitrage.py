@@ -24,23 +24,23 @@ class Arbitrage():
         self.MIN_TRANS_UNIT = min([self.exc1.MIN_TRANS_UNIT, self.exc2.MIN_TRANS_UNIT])
 
     def get_relation(self):
-        if self.exc1.ticker["ask"] > self.exc2.ticker["ask"]:
+        if self.exc1.ticker.ask > self.exc2.ticker.ask:
             self.high_ask_exc, self.low_ask_exc = self.exc1, self.exc2
         else:
             self.high_ask_exc, self.low_ask_exc = self.exc2, self.exc1
 
-        if self.high_ask_exc.ticker["bid"] > self.low_ask_exc.ticker["ask"]:
+        if self.high_ask_exc.ticker.bid > self.low_ask_exc.ticker.ask:
             relation = "gap"
-        elif self.high_ask_exc.ticker["ask"] >= self.low_ask_exc.ticker["bid"]:
+        elif self.high_ask_exc.ticker.ask >= self.low_ask_exc.ticker.bid:
             relation = "intersection"
         else:
             relation = "inclusion"
         return relation
     
     def calc_margin(self):
-        selling_price = self.high_ask_exc.ticker["bid"]
+        selling_price = self.high_ask_exc.ticker.bid
         selling_charge = selling_price * self.high_ask_exc.TRANS_CHARGE_RATE
-        buying_price = self.low_ask_exc.ticker["ask"]
+        buying_price = self.low_ask_exc.ticker.ask
         buying_charge = buying_price * self.low_ask_exc.TRANS_CHARGE_RATE
         margin = selling_price - buying_price - selling_charge - buying_charge
         return margin
@@ -48,13 +48,13 @@ class Arbitrage():
     def get_margin_type(self, margin):
         MARGIN_THRES_RATE = [0.0003, 0.0006, 0.0009, 0.0012] # 2100, 4900, 8400, 12600 
 
-        if margin < MARGIN_THRES_RATE[0] * self.high_ask_exc.ticker["ask"]:
+        if margin < MARGIN_THRES_RATE[0] * self.high_ask_exc.ticker.ask:
             margin_type = "little"
-        elif margin < MARGIN_THRES_RATE[1] * self.high_ask_exc.ticker["ask"]:
+        elif margin < MARGIN_THRES_RATE[1] * self.high_ask_exc.ticker.ask:
             margin_type = "small"
-        elif margin < MARGIN_THRES_RATE[2] * self.high_ask_exc.ticker["ask"]:
+        elif margin < MARGIN_THRES_RATE[2] * self.high_ask_exc.ticker.ask:
             margin_type = "mid"
-        elif margin < MARGIN_THRES_RATE[3] * self.high_ask_exc.ticker["ask"]:
+        elif margin < MARGIN_THRES_RATE[3] * self.high_ask_exc.ticker.ask:
             margin_type = "large"
         else:
             margin_type = "huge"
@@ -67,25 +67,24 @@ class Arbitrage():
         target_btc_ratio["large"] = 7/8
         target_btc_ratio["huge"] = 8/8
 
-        total_btc = self.exc1.balance["BTC"] + self.exc2.balance["BTC"]
-        size = total_btc * target_btc_ratio[margin_type] - self.low_ask_exc.balance["BTC"]
+        total_btc = self.exc1.account.balance["BTC"] + self.exc2.account.balance["BTC"]
+        size = total_btc * target_btc_ratio[margin_type] - self.low_ask_exc.account.balance["BTC"]
         if size < self.MIN_TRANS_UNIT:
             size = 0
         return round(size, 8)
     
     def fetch_simul_tickers(self):
-        funcs = (self.exc1.fetch_ticker, self.exc2.fetch_ticker)
+        funcs = (self.exc1.ticker.fetch, self.exc2.ticker.fetch)
         send_async_requests(funcs)
     
     def fetch_simul_balances(self):
-        funcs = (self.exc1.fetch_balance, self.exc2.fetch_balance)
+        funcs = (self.exc1.account.fetch_balance, self.exc2.account.fetch_balance)
         send_async_requests(funcs)
     
-    def make_simul_transactions(self, size):
+    def make_simul_transactions(self, sell_order, buy_order):
         # send orders
-        funcs = (self.high_ask_exc.send_order, self.low_ask_exc.send_order)
-        args = (("sell", size), ("buy", size))
-        sell_order_id, buy_order_id = send_async_requests(funcs, args)
+        funcs = (sell_order.send, buy_order.send)
+        sell_order_id, buy_order_id = send_async_requests(funcs)
 
         # get transactions
         funcs = (self.high_ask_exc.get_transaction_result, self.low_ask_exc.get_transaction_result)
@@ -140,7 +139,7 @@ class Arbitrage():
             # fetch tickers
             self.fetch_simul_tickers()
 
-            tmp = self.exc1.ticker["bid"] - self.exc2.ticker["ask"]
+            tmp = self.exc1.ticker.bid - self.exc2.ticker.ask
             relation = self.get_relation()  # gap/intersection/inclusion
             print(relation, tmp)
             if relation != "gap":
@@ -159,8 +158,11 @@ class Arbitrage():
             if size == 0:
                 self.wait_until_next_loop(start)
                 continue
-
-            sell_result, buy_result = self.make_simul_transactions(size)
+            
+            size = self.MIN_TRANS_UNIT
+            new_sell_order = self.high_ask_exc.create_order("limit", "sell", size, price=self.high_ask_exc.ticker.bid)
+            new_buy_order = self.low_ask_exc.create_order("limit", "buy", size, price=self.low_ask_exc.ticker.ask)
+            sell_result, buy_result = self.make_simul_transactions(new_buy_order, new_sell_order)
             print(margin)
             self.show_contract_result(sell_result, buy_result)
 

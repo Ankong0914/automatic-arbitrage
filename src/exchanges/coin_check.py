@@ -64,8 +64,8 @@ class CoinCheck(Exchange):
         
 
     class Order(BaseOrder):
-        def __init__(self, coincheck, order_type_key, side_key, price=None):
-            super(CoinCheck.Order, self).__init__(coincheck, order_type_key, side_key, price)
+        def __init__(self, coincheck, order_type_key, side_key, size, price=None):
+            super(CoinCheck.Order, self).__init__(coincheck, order_type_key, side_key, size, price)
         
         def generate_body(self):
             if self.side == "market_buy":
