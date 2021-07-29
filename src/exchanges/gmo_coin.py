@@ -5,6 +5,7 @@ from exchanges.exchange import Exchange
 from exchanges.ticker import BaseTicker
 from exchanges.account import BaseAccount
 from exchanges.order import BaseOrder
+from exchanges.utils import send_http_request
 
 
 class GmoCoin(Exchange):
@@ -28,7 +29,7 @@ class GmoCoin(Exchange):
         url = f"https://api.coin.z.com/private/v1/executions?orderId={id}"
         method, path = "GET", "/v1/executions"
         headers = self.generate_headers(path, method=method)
-        transactions = self.request_api(url, headers=headers)
+        transactions = send_http_request(url, headers=headers)
         return transactions["data"]["list"]
     
     def pick_transactions_info(self, transactions):
@@ -69,9 +70,9 @@ class GmoCoin(Exchange):
         def parse_balance(self, balance):
             for currency_data in balance["data"]:
                 if currency_data["symbol"] == "JPY":
-                    balance_jpy = currency_data["amount"]
+                    balance_jpy = float(currency_data["amount"])
                 elif currency_data["symbol"] == "BTC":
-                    balance_btc = currency_data["amount"]
+                    balance_btc = float(currency_data["amount"])
             self.balance = {
                 "JPY": balance_jpy,
                 "BTC": balance_btc
@@ -83,7 +84,7 @@ class GmoCoin(Exchange):
         def __init__(self, gmocoin, order_type_key, side_key, size, price=None):
             super(GmoCoin.Order, self).__init__(gmocoin, order_type_key, side_key, size, price)
         
-        def gen_order_body(self):
+        def generate_body(self):
             body = {
                 "symbol": "BTC",
                 "side": self.side,

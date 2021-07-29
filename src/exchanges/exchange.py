@@ -38,8 +38,8 @@ class Exchange:
     def create_account(self):
         return self.Account(self)
     
-    def create_order(self, order_type_key, side_key, price=None):
-        return self.Order(self, order_type_key, side_key, price)
+    def create_order(self, order_type_key, side_key, size, price=None):
+        return self.Order(self, order_type_key, side_key, size, price)
 
     def generate_headers(self, path, method="", body=""):
         conf = self.api_conf["auth"]

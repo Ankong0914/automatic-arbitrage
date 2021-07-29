@@ -39,9 +39,9 @@ class Arbitrage():
     
     def calc_margin(self):
         selling_price = self.high_ask_exc.ticker.bid
-        selling_charge = selling_price * self.high_ask_exc.TRANS_CHARGE_RATE
+        selling_charge = selling_price * self.high_ask_exc.trans_charge_rate
         buying_price = self.low_ask_exc.ticker.ask
-        buying_charge = buying_price * self.low_ask_exc.TRANS_CHARGE_RATE
+        buying_charge = buying_price * self.low_ask_exc.trans_charge_rate
         margin = selling_price - buying_price - selling_charge - buying_charge
         return margin
 
@@ -139,9 +139,8 @@ class Arbitrage():
             # fetch tickers
             self.fetch_simul_tickers()
 
-            tmp = self.exc1.ticker.bid - self.exc2.ticker.ask
             relation = self.get_relation()  # gap/intersection/inclusion
-            print(relation, tmp)
+            print(f"{relation} / {self.high_ask_exc.NAME} - {self.low_ask_exc.NAME}")
             if relation != "gap":
                 self.wait_until_next_loop(start)
                 continue
@@ -160,8 +159,8 @@ class Arbitrage():
                 continue
             
             size = self.MIN_TRANS_UNIT
-            new_sell_order = self.high_ask_exc.create_order("limit", "sell", size, price=self.high_ask_exc.ticker.bid)
-            new_buy_order = self.low_ask_exc.create_order("limit", "buy", size, price=self.low_ask_exc.ticker.ask)
+            new_sell_order = self.high_ask_exc.create_order(self.high_ask_exc.order_type, "sell", size, price=self.high_ask_exc.ticker.bid)
+            new_buy_order = self.low_ask_exc.create_order(self.low_ask_exc.order_type, "buy", size, price=self.low_ask_exc.ticker.ask)
             sell_result, buy_result = self.make_simul_transactions(new_buy_order, new_sell_order)
             print(margin)
             self.show_contract_result(sell_result, buy_result)
