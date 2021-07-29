@@ -12,7 +12,10 @@ class BitFlyer(Exchange):
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_FEE = 0.0004
         # TODO: this value is changed depends on the amount of transaction for recent month
-        self.TRANS_CHARGE_RATE = 0.0015
+        self._trans_charge_rate = {
+            "taker": 0.0015,
+            "maker": 0.0015
+        }
 
         self.ticker = self.create_ticker()
         self.account = self.create_account()

@@ -6,7 +6,7 @@ import hashlib
 
 from exchanges.utils import send_http_request
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 
 DB_API_PORT = os.environ.get("DB_API_PORT")
 
@@ -23,6 +23,14 @@ class Exchange:
 
         self.logger = logging.getLogger(name)
         self.NAME = name
+        self.order_type = "limit"
+    
+    @property
+    def trans_charge_rate(self):
+        if self.order_type == "market":
+            return self._trans_charge_rate["taker"]
+        elif self.order_type == "limit":
+            return self._trans_charge_rate["maker"]
 
     def create_ticker(self):
         return self.Ticker(self)

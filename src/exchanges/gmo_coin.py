@@ -12,7 +12,10 @@ class GmoCoin(Exchange):
         super(GmoCoin, self).__init__("GMOCoin")
         self.MIN_TRANS_UNIT = 0.0001
         self.REMITTANCE_CHARGE_RATE = 0
-        self.TRANS_CHARGE_RATE = 0.0005
+        self._trans_charge_rate = {
+            "taker": 0.0005,
+            "maker": -0.0001
+        }
 
         self.ticker = self.create_ticker()
         self.account = self.create_account()

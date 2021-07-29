@@ -12,7 +12,10 @@ class Liquid(Exchange):
         super(Liquid, self).__init__("Liquid")
         self.MIN_TRANS_UNIT = 0.001
         self.REMITTANCE_CHARGE_RATE = 0
-        self.TRANS_CHARGE_RATE = 0
+        self._trans_charge_rate = {
+            "taker": 0,
+            "maker": 0
+        }
 
         self.ticker = self.create_ticker()
         self.account = self.create_account()

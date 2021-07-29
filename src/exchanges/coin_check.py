@@ -11,7 +11,10 @@ class CoinCheck(Exchange):
         super(CoinCheck, self).__init__("Coincheck")
         self.MIN_TRANS_UNIT = 0.005
         self.REMITTANCE_CHARGE_RATE = 0.001
-        self.TRANS_CHARGE_RATE = 0
+        self._trans_charge_rate = {
+            "taker": 0,
+            "maker": 0
+        }
         
         self.ticker = self.create_ticker()
         self.account = self.create_account()
