@@ -5,6 +5,7 @@ from exchanges.exchange import Exchange
 from exchanges.ticker import BaseTicker
 from exchanges.account import BaseAccount
 from exchanges.order import BaseOrder
+from exchanges.transaction import BaseTransaction
 
 
 class Liquid(Exchange):
@@ -19,6 +20,7 @@ class Liquid(Exchange):
 
         self.ticker = self.create_ticker()
         self.account = self.create_account()
+        self.transaction = self.create_transaction()
 
     def generate_headers(self, path, method="", body=""):
         timestamp = datetime.now().timestamp()
@@ -78,6 +80,11 @@ class Liquid(Exchange):
                 "BTC": balance_btc
             }
             self.logger.info("balance is updated")
+    
+
+    class Transaction(BaseTransaction):
+        def __init__(self, liquid):
+            super(Liquid.Transaction, self).__init__(liquid)
 
 
     class Order(BaseOrder):

@@ -19,10 +19,17 @@
             "path": "",
             "method": ""
         },
-        "transactions": {
-            "url": "",
-            "path": "",
-            "method": ""
+        "transaction": {
+            "executions": {
+                "url": "",
+                "path": "",
+                "method": ""
+            },
+            "execution":{
+                "url": "",
+                "path": "",
+                "method": ""
+            }
         },
         "order": {
             "url": "",
@@ -56,10 +63,17 @@
             "path": "/accounts/balance",
             "method": ""
         },
-        "transactions": {
-            "url": "https://api.liquid.com/executions/me?product_id=5",
-            "path": "/executions/me?product_id=5",
-            "method": ""
+        "transaction": {
+            "executions": {
+                "url": "https://api.liquid.com/executions/me?product_id=5",
+                "path": "/executions/me?product_id=5",
+                "method": ""
+            },
+            "execution":{
+                "url": "",
+                "path": "",
+                "method": ""
+            }
         },
         "order": {
             "url": "https://api.liquid.com/orders/",
@@ -93,10 +107,17 @@
             "path": "https://coincheck.com/api/accounts/balance",
             "method": ""
         },
-        "transactions": {
-            "url": "https://coincheck.com/api/exchange/orders/transactions",
-            "path": "https://coincheck.com/api/exchange/orders/transactions",
-            "method": ""
+        "transaction": {
+            "executions": {
+                "url": "https://coincheck.com/api/exchange/orders/transactions",
+                "path": "https://coincheck.com/api/exchange/orders/transactions",
+                "method": ""
+            },
+            "execution":{
+                "url": "",
+                "path": "",
+                "method": ""
+            }
         },
         "order": {
             "url": "https://coincheck.com/api/exchange/orders",
@@ -128,10 +149,17 @@
             "path": "/v1/account/assets",
             "method": "GET"
         },
-        "transactions": {
-            "url": "https://api.coin.z.com/private/v1/latestExecutions?symbol=BTC",  
-            "path": "/v1/latestExecutions",
-            "method": "GET"
+        "transaction": {
+            "executions": {
+                "url": "",
+                "path": "",
+                "method": ""
+            },
+            "execution":{
+                "url": "https://api.coin.z.com/private/v1/executions",
+                "path": "/private/v1/executions",
+                "method": "GET"
+            }
         },
         "order": {
             "url": "https://api.coin.z.com/private/v1/order",
@@ -165,10 +193,17 @@
             "path": "/v1/me/getbalance",
             "method": "GET"
         },
-        "transactions": {
-            "url": "https://api.bitflyer.com/v1/me/getchildorders",
-            "path": "/v1/me/getchildorders",
-            "method": "GET"
+        "transaction": {
+            "executions": {
+                "url": "https://api.bitflyer.com/v1/me/getexecutions",
+                "path": "/v1/me/getexecutions",
+                "method": "GET"
+            },
+            "execution":{
+                "url": "https://api.bitflyer.com/v1/me/getexecutions",
+                "path": "/v1/me/getexecutions",
+                "method": "GET"
+            }
         },
         "order": {
             "url": "https://api.bitflyer.com/v1/me/sendchildorder",

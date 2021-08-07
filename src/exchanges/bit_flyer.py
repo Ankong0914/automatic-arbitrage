@@ -4,6 +4,7 @@ from exchanges.exchange import Exchange
 from exchanges.ticker import BaseTicker
 from exchanges.account import BaseAccount
 from exchanges.order import BaseOrder
+from exchanges.transaction import BaseTransaction
 
 
 class BitFlyer(Exchange):
@@ -19,6 +20,7 @@ class BitFlyer(Exchange):
 
         self.ticker = self.create_ticker()
         self.account = self.create_account()
+        self.transaction = self.create_transaction()
 
     def get_nonce_for_headers(self):
         nonce = str(time.time())
@@ -51,6 +53,11 @@ class BitFlyer(Exchange):
                 "BTC": balance_btc
             }
             self.logger.info("balance is updated")
+
+
+    class Transaction(BaseTransaction):
+        def __init__(self, bitflyer):
+            super(BitFlyer.Transaction, self).__init__(bitflyer)
 
     
     class Order(BaseOrder):

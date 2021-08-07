@@ -4,6 +4,7 @@ from exchanges.exchange import Exchange
 from exchanges.ticker import BaseTicker
 from exchanges.account import BaseAccount
 from exchanges.order import BaseOrder
+from exchanges.transaction import BaseTransaction
 
 
 class CoinCheck(Exchange):
@@ -18,6 +19,7 @@ class CoinCheck(Exchange):
         
         self.ticker = self.create_ticker()
         self.account = self.create_account()
+        self.transaction = self.create_transaction()
         self.nonce = "0"
 
     def get_nonce_for_headers(self):
@@ -64,6 +66,10 @@ class CoinCheck(Exchange):
                 "BTC": float(balance["btc"])
             }
             self.logger.info("balance is updated")
+    
+    class Transaction(BaseTransaction):
+        def __init__(self, coincheck):
+            super(CoinCheck.Transaction, self).__init__(coincheck)
         
 
     class Order(BaseOrder):

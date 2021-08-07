@@ -38,6 +38,9 @@ class Exchange:
     def create_account(self):
         return self.Account(self)
     
+    def create_transaction(self):
+        return self.Transaction(self)
+    
     def create_order(self, order_type_key, side_key, size, price=None):
         return self.Order(self, order_type_key, side_key, size, price)
 
@@ -59,26 +62,6 @@ class Exchange:
             'Content-Type': 'application/json'
         }
         return headers
-
-    def update_balance(self, balance):
-        pass
-
-    def fetch_balance(self):
-        conf = self.api_conf["balance"]
-        url, method, path = conf["url"], conf["method"], conf["path"]
-        headers = self.generate_headers(path, method=method)
-        balance = send_http_request(url, headers=headers)
-        self.update_balance(balance)
-    
-    def get_transactions(self):
-        conf = self.api_conf["transactions"]
-        url, method, path = conf["url"], conf["method"], conf["path"]
-        headers = self.generate_headers(path, method=method)
-        transactions = send_http_request(url, headers=headers)
-        return transactions
-
-    def gen_order_body(self, side, size):
-        pass
 
     def pick_order_id(self, order_result):
         pass

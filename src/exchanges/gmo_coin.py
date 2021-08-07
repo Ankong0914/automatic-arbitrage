@@ -5,7 +5,7 @@ from exchanges.exchange import Exchange
 from exchanges.ticker import BaseTicker
 from exchanges.account import BaseAccount
 from exchanges.order import BaseOrder
-from exchanges.utils import send_http_request
+from exchanges.transaction import BaseTransaction
 
 
 class GmoCoin(Exchange):
@@ -20,6 +20,7 @@ class GmoCoin(Exchange):
 
         self.ticker = self.create_ticker()
         self.account = self.create_account()
+        self.transaction = self.create_transaction()
     
     def get_nonce_for_headers(self):
         nonce = '{0}000'.format(int(time.mktime(datetime.now().timetuple())))
@@ -79,7 +80,15 @@ class GmoCoin(Exchange):
             }
             self.logger.info("balance is updated")
 
-            
+
+    class Transaction(BaseTransaction):
+        def __init__(self, gmocoin):
+            super(GmoCoin.Transaction, self).__init__(gmocoin)
+        
+        def get_executions_list(self):
+            print("Not Supported")  # TODO: Raise
+
+     
     class Order(BaseOrder):
         def __init__(self, gmocoin, order_type_key, side_key, size, price=None):
             super(GmoCoin.Order, self).__init__(gmocoin, order_type_key, side_key, size, price)
