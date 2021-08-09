@@ -3,7 +3,9 @@ import logging
 import json
 import hmac
 import hashlib
+import time
 
+from exchanges.ticker import Ticker
 from exchanges.utils import send_http_request
 
 logging.basicConfig(level=logging.WARNING)
@@ -32,9 +34,6 @@ class Exchange:
         elif self.order_type == "limit":
             return self._trans_charge_rate["maker"]
 
-    def create_ticker(self):
-        return self.Ticker(self)
-
     def create_account(self):
         return self.Account(self)
     
@@ -62,7 +61,14 @@ class Exchange:
             'Content-Type': 'application/json'
         }
         return headers
-
+        
+    def fetch_ticker(self):
+        url = self.api_conf["ticker"]["url"]
+        ticker_data = send_http_request(url)
+        parsed_ticker = self.parse_ticker(ticker_data)
+        self.ticker = Ticker(self, **parsed_ticker)
+        self.logger.info("ticker is updated")
+    
     def pick_order_id(self, order_result):
         pass
 

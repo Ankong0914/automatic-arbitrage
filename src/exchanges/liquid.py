@@ -2,7 +2,6 @@ from datetime import datetime
 import jwt
 
 from exchanges.exchange import Exchange
-from exchanges.ticker import BaseTicker
 from exchanges.account import BaseAccount
 from exchanges.order import BaseOrder
 from exchanges.transaction import BaseTransaction
@@ -18,7 +17,6 @@ class Liquid(Exchange):
             "maker": 0
         }
 
-        self.ticker = self.create_ticker()
         self.account = self.create_account()
         self.transaction = self.create_transaction()
 
@@ -37,6 +35,20 @@ class Liquid(Exchange):
             'Content-Type' : 'application/json'
         }
         return headers
+    
+    
+    def parse_ticker(self, ticker_data):
+        conf = self.api_conf["ticker"]
+        parsed_ticker = {
+            "ask": ticker_data[conf["ask_key"]],
+            "bid": ticker_data[conf["bid_key"]],
+            "high": float(ticker_data[conf["high_key"]]),
+            "low": float(ticker_data[conf["low_key"]]),
+            "volume": float(ticker_data[conf["volume_key"]]),
+            "timestamp": ticker_data[conf["timestamp_key"]],
+        }
+        return parsed_ticker
+        
 
     def get_transactions_from_id(self, id):
         all_transactions = self.get_transactions()["models"]
@@ -58,11 +70,6 @@ class Liquid(Exchange):
             }
             trans_result.append(trans_info)
         return trans_result
-
-
-    class Ticker(BaseTicker):
-        def __init__(self, liquid):
-            super(Liquid.Ticker, self).__init__(liquid)
     
 
     class Account(BaseAccount):
